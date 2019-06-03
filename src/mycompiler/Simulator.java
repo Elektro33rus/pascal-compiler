@@ -581,8 +581,15 @@ public class Simulator {
         String var1 = (String) stackNumber.pop();
         String var2 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+alloca+" = add i32 %"+var1+", %"+var2+"\n");
-        stackNumber.push(alloca);
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = add i32 %"+alloca+", %"+alloca2+"\n"
+        				+ "%"+alloca4+" = alloca i32\n"
+        						+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        stackNumber.push(alloca4);
     }
 
     private static void fadd() {
@@ -709,17 +716,15 @@ public class Simulator {
     public static void pushi(){
         int val = getAddressValue();
 		String alloca = giveMeNumberVar();
-		String temp = giveMeNumberVar();
+		//String temp = giveMeNumberVar();
     	if (startint) {
 	        input("%"+alloca+" = alloca i32\n"
-	    			+ "store i32 " + val +", i32* %"+alloca+"\n"
-	    	    			+ "%"+temp+" = load i32, i32* %"+alloca+"\n");
-	        stackNumber.push(temp);
+	    			+ "store i32 " + val +", i32* %"+alloca+"\n");
+	        stackNumber.push(alloca);
     	} else {
 	        input("%"+alloca+" = alloca double\n"
-	    			+ "store double " + val +", double* %"+alloca+"\n"
-	    			+ "%"+temp+" = load double, double* %"+alloca+"\n");
-	        stackNumber.push(temp);
+	    			+ "store double " + val +", double* %"+alloca+"\n");
+	        stackNumber.push(alloca);
     	}
         stack.push(val);
     }

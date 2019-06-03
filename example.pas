@@ -3,16 +3,11 @@ var y, i : integer;
 
 begin
 
-i:=111+222;
-writeln(i);
-
-i:=i+333;
-writeln(i);
-
-i:=i+i;
-writeln(i);
-
-i:=i+444;
-i:=i+i;
-writeln(i);
+for i:=0 to 10 do
+	begin
+		for y:=0 to 10 do
+		begin
+			writeln(i);
+		end;
+	end;
 end.
