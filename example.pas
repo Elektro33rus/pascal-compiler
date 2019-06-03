@@ -4,7 +4,7 @@ var y, i : integer;
 begin
 
 for i:=0 to 10 do
-begin
+	begin
 		writeln(i);
-end;
+	end;
 end.
