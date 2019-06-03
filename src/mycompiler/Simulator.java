@@ -175,12 +175,16 @@ public class Simulator {
                 	vardecl+="){\n";
                 	break;
                 case FORSTART:
+                	String alloca34 = giveMeNumberVar();
                 	String alloca = giveMeNumberVar();
                 	dp = getAddressValue();
                 	String temp = dataArrayTemp[dp];
                 	String label = giveMeNumberVar();
-                	input("\n;for start\n%"+alloca+" = alloca i32\n"
-                			+ "store i32 %"+temp+", i32* %"+alloca+"\n"
+                	input("\n"
+                			+ ";for start\n"
+                			+ "%"+alloca34+" = load i32, i32* %"+temp+"\n"
+                			+ "%"+alloca+" = alloca i32\n"
+                			+ "store i32 %"+alloca34+", i32* %"+alloca+"\n"
                 					+ "br label %"+label+"\n\n");
                 	stackNumber.push(label);
                 	dataArrayTemp[dp]=alloca;
@@ -802,11 +806,11 @@ public class Simulator {
     public static void pop(){
         String alloca = (String) stackNumber.pop();
         dp = getAddressValue();
-        String alloca2 = giveMeNumberVar();
+        //String alloca2 = giveMeNumberVar();
 
-        dataArrayTemp[dp] = alloca2;
-        input("%"+alloca2+" = load i32, i32* %"+alloca+"\n");
-        stackNumber.push(alloca2);
+        dataArrayTemp[dp] = alloca;
+        //input("%"+alloca2+" = load i32, i32* %"+alloca+"\n");
+        stackNumber.push(alloca);
     }
 
     public static void halt() {
