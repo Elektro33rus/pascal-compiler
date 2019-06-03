@@ -438,12 +438,11 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART
         currentToken.setTokenType("TK_A_VAR");
         Token token = currentToken;
         assignmentStat();
-        genOpCode(OP_CODE.FORSTART);
         Symbol symb = findSymbol(token);
+        genOpCode(OP_CODE.FORSTART);
         genAddress(symb.getAddress());
         Symbol symbol = SymbolTable.lookup(varName, Region);
         if (symbol != null) {
-        	
         	match("TK_TO");
         	if (currentToken.getTokenType().equals("TK_INTLIT")) {
                 genOpCode(OP_CODE.PUSHINT);
@@ -454,7 +453,6 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART
         	else if (currentToken.getTokenType().equals("TK_IDENTIFIER"))
         		match("TK_IDENTIFIER");
         	else throw new Error("Неверный тип данных для цикла for: "+currentToken.getTokenType());
-        	
         	match("TK_DO");
         	match("TK_BEGIN");
         	genOpCode(OP_CODE.FORBEGIN);
