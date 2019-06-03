@@ -178,7 +178,7 @@ public class Simulator {
                 	dp = getAddressValue();
                 	String load = giveMeNumberVar();
                 	String alloca = giveMeNumberVar();
-                	String popStack = stackNumber.pop();
+                	String popStack = dataArrayTemp[dp];
                 	String label = giveMeNumberVar();
                 	input("\n;ForStart\n%"+load + " = load i32, i32* %"+popStack+"\n"
                 			+ "%"+alloca+" = alloca i32\n"
@@ -795,7 +795,7 @@ public class Simulator {
 
         dataArrayTemp[dp] = alloca;
         //input("%"+alloca2+" = load i32, i32* %"+alloca+"\n");
-        stackNumber.push(alloca);
+        //stackNumber.push(alloca); //??
     }
 
     public static void halt() {
