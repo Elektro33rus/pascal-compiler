@@ -2,13 +2,13 @@ program zadaca;
 var y, i,x : integer;
 
 begin
-
-for i:=0 to 10 do
-	begin
-		for y:=0 to 10 do
-		begin
-			x:=i+y;
-			writeln(x);
-		end;
-	end;
+x:=100;
+if (5 < 4) then
+begin
+	x:=x+500;
+end;
+else
+begin
+	x:=x+100;
+end;
 end.

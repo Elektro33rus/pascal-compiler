@@ -553,11 +553,13 @@ public class Simulator {
     }
 
     private static void printReal() {
-        String alloca = giveMeNumberVar();
-    	String temp = (String) stackNumber.pop();
-        input("%"+alloca+" = call i32 (i8*, ...) "
+    	String alloca = giveMeNumberVar();
+    	String intVar = (String) stackNumber.pop();
+    	String alloca2 = giveMeNumberVar();
+        input("%"+alloca+" = load double, double* %"+intVar+"\n"
+        		+ "%"+alloca2+" = call i32 (i8*, ...) "
 				+ "@printf(i8* getelementptr inbounds ([4 x i8], "
-				+ "[4 x i8]* @.strfloat, i32 0, i32 0), double %"+temp+")\n");
+				+ "[4 x i8]* @.strfloat, i32 0, i32 0), i32 %"+alloca+")\n");
     }
     
     private static void printLn() {
@@ -601,11 +603,18 @@ public class Simulator {
     }
 
     public static void sub(){
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+alloca+" = sub i32 %"+t1+", %"+t2+"\n");
-        stackNumber.push(alloca);
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = sub i32 %"+alloca+", %"+alloca2+"\n"
+        				+ "%"+alloca4+" = alloca i32\n"
+        						+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        stackNumber.push(alloca4);
     }
 
     public static void fsub(){
@@ -622,16 +631,18 @@ public class Simulator {
     }
 
     public static void mult(){
-        int val1 = (int) stack.pop();
-        int val2 = (int) stack.pop();
-        
-        String t1 = (String) stackNumber.pop();
-        String t2 = (String) stackNumber.pop();
-        String alloca = (String) giveMeNumberVar();
-        input("%"+alloca+" = mul i32 %"+t1+", %"+t2+"\n");
-        stackNumber.push(alloca);
-        
-        stack.push(val1 * val2);
+        String var1 = (String) stackNumber.pop();
+        String var2 = (String) stackNumber.pop();
+        String alloca = giveMeNumberVar();
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = mul i32 %"+alloca+", %"+alloca2+"\n"
+        				+ "%"+alloca4+" = alloca i32\n"
+        						+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        stackNumber.push(alloca4);
     }
 
     public static void fmult(){
@@ -648,16 +659,18 @@ public class Simulator {
     }
 
     public static void div(){
-        int val2 = (int) stack.pop();
-        int val1 = (int) stack.pop();
-        
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String alloca = (String) giveMeNumberVar();
-        input("%"+alloca+" = div i32 %"+t1+", %"+t2+"\n");
-        stackNumber.push(alloca);
-        
-        stack.push(val1 / val2);
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
+        String alloca = giveMeNumberVar();
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = div i32 %"+alloca+", %"+alloca2+"\n"
+        				+ "%"+alloca4+" = alloca i32\n"
+        						+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        stackNumber.push(alloca4);
     }
     
     public static void fdiv(){
