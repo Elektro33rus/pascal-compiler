@@ -581,12 +581,8 @@ public class Simulator {
         String var1 = (String) stackNumber.pop();
         String var2 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        String alloca2 = giveMeNumberVar();
-        String alloca3 = giveMeNumberVar();
-        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
-        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
-        		+ "%"+alloca3+" = add i32 %"+alloca+", %"+alloca2+"\n");
-        stackNumber.push(alloca3);
+        input("%"+alloca+" = add i32 %"+var1+", %"+var2+"\n");
+        stackNumber.push(alloca);
     }
 
     private static void fadd() {
@@ -712,14 +708,14 @@ public class Simulator {
     private static boolean startint = true;
     public static void pushi(){
         int val = getAddressValue();
+		String alloca = giveMeNumberVar();
+		String temp = giveMeNumberVar();
     	if (startint) {
-    		String alloca = giveMeNumberVar();
 	        input("%"+alloca+" = alloca i32\n"
-	    			+ "store i32 " + val +", i32* %"+alloca+"\n");
-	        stackNumber.push(alloca);
+	    			+ "store i32 " + val +", i32* %"+alloca+"\n"
+	    	    			+ "%"+temp+" = load i32, i32* %"+alloca+"\n");
+	        stackNumber.push(temp);
     	} else {
-    		String alloca = giveMeNumberVar();
-    		String temp = giveMeNumberVar();
 	        input("%"+alloca+" = alloca double\n"
 	    			+ "store double " + val +", double* %"+alloca+"\n"
 	    			+ "%"+temp+" = load double, double* %"+alloca+"\n");
@@ -736,29 +732,25 @@ public class Simulator {
     
     private static void pushf() {
         float val = getFloatValue();
-        
         String alloca = giveMeNumberVar();
         String load = giveMeNumberVar();
         input("%"+alloca+" = alloca double\n"
     			+ "store double " + val +", double* %"+alloca+"\n"
     			+ "%"+load+" = load double, double* %"+alloca+"\n");
         stackNumber.push(load);
-        
         stack.push(val);
     }
 
     public static void pushvarfromdecl(){
         dp = getAddressValue();
-        
         String temp = (String) stackNumber.firstElement();
         stackNumber.remove(0);
         String alloca = giveMeNumberVar();
         String load = giveMeNumberVar();
-        
+
         vardecl+="%"+alloca+" = alloca i32\n"
         		+ "store i32 %"+temp+", i32* %"+alloca+"\n"
         				+ "%"+load+" = load i32, i32* %"+alloca+"\n";
-        
         dataArrayTemp[dp] = load;
     }
     
@@ -776,8 +768,8 @@ public class Simulator {
         stackNumber.push(load);
     }
 
-    public static void push(){
-        dp = getAddressValue();
+    public static void push() {
+    	dp = getAddressValue();
         stackNumber.push(dataArrayTemp[dp]);
     }
     
