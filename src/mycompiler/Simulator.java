@@ -299,18 +299,24 @@ public class Simulator {
     		schetAnd=-1;
     		forandIf.clear();
     	}
-    	String temp = (String) giveMeNumberVar();
-    	input("br label %"+temp+"\n");
-    	input("\n;Label %"+temp+" ifend\n");
-    	String prob="";
-    	String prob1="";
-    	if (!stackNumber.isEmpty()) {
-    		prob = iff.pop();
-    		prob1 = stackNumber.pop();
-    		AllProgram=AllProgram.replace(prob, temp);
+
+    	if (iff.size()!=1) {
+    		
     	}
-    	prob = iff.pop();
-    	AllProgram=AllProgram.replace(prob, prob1);
+    	
+    	String labelexit = (String) giveMeNumberVar();
+    	String criptoExitStart=iff.pop();
+    	if (stackNumber.isEmpty()) {
+    		AllProgram=AllProgram.replace(criptoExitStart, labelexit);
+    	}
+    	else {
+    		String labelElse = stackNumber.pop();
+    		String criptoExitThen = iff.pop();
+    		AllProgram=AllProgram.replace(criptoExitStart, labelexit);
+    		AllProgram=AllProgram.replace(criptoExitThen, labelElse);
+    	}
+    	input("br label %"+labelexit+"\n");
+    	input("\n;Label %"+labelexit+" ifend\n");
     	dataArrayTemp = te2.pop();
     	te2.push(dataArrayTemp.clone());
     }
