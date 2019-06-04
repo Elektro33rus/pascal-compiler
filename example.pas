@@ -1,14 +1,15 @@
 program zadaca;
-var y, i,x : integer;
+var y, i : integer;
 
 begin
-x:=100;
+y:=500;
 if (5 < 4) then
 begin
-	x:=x+500;
+	y:=y+100;
 end;
 else
 begin
-	x:=x+100;
+	y:=y+200;
 end;
+writeln(y);
 end.

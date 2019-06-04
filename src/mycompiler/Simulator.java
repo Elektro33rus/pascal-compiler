@@ -284,7 +284,6 @@ public class Simulator {
     
     private static void ifend() {
     	ifEnd++;
-    	
     	if (!forandIf.isEmpty()) {
     		String temp = (String) giveMeNumberVar();
     		for (int i=0; i<forandIf.size(); i++)
@@ -489,14 +488,17 @@ public class Simulator {
     }
 
     private static void lessIf() {
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String temp = giveMeNumberVar();
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+temp+" = icmp slt i32 %"+t1+", %"+t2+"\n"
-            		+"br i1 %"+temp+", label %"+alloca+", label %");
-        
-        stackNumber.push(alloca);
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = icmp slt i32 %"+alloca+", %"+alloca2+"\n"
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %");
+        stackNumber.push(alloca4);
     }
    
     private static void greaterIf() {
