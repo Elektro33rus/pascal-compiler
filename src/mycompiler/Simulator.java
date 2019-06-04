@@ -119,7 +119,7 @@ public class Simulator {
                 		AllProgram = AllProgram.replace(replaceLabel, label8);
                 	}
                 	
-                	input("\n;Label WHILEEND2 %"+label7+"\n");
+                	input("\n;Label %"+label7+"\n");
                 	String replaceLabel3 = whileStackLabels.pop();
                 	AllProgram = AllProgram.replace(replaceLabel3, label7);
                 	if (!breakStackLabels.isEmpty()) {
