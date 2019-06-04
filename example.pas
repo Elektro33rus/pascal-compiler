@@ -5,7 +5,7 @@ begin
 y:=1;
 y:=y+y+y;
 writeln(y);
-
+i:=0;
 if (5 < 4) then
 begin
 	i:=50;

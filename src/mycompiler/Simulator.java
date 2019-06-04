@@ -276,15 +276,7 @@ public class Simulator {
     }
     
     private static void ifelse() {
-    	String[] dataArrayTemp2 = te2.pop();
-    	for (int i=0;i<dataArrayTemp.length;i++) {
-    		if (dataArrayTemp[i]!=null) {
-    			if (dataArrayTemp2[i]==null) {
-    				dataArrayTemp2[i]=dataArrayTemp[i];
-    			}
-    		}
-    	}
-    	dataArrayTemp = dataArrayTemp2;
+    	dataArrayTemp = te2.pop();
     	te2.push(dataArrayTemp.clone());
     	poryadok.add("else");
     	isIfthen = false;
@@ -332,15 +324,7 @@ public class Simulator {
     		}
     		poryadok.remove(0);
     	}
-    	String[] dataArrayTemp2 = te2.pop();
-    	for (int i=0;i<dataArrayTemp.length;i++) {
-    		if (dataArrayTemp[i]!=null) {
-    			if (dataArrayTemp2[i]==null) {
-    				dataArrayTemp2[i]=dataArrayTemp[i];
-    			}
-    		}
-    	}
-    	dataArrayTemp = dataArrayTemp2;
+    	dataArrayTemp = te2.pop();
     	}
     }
     
