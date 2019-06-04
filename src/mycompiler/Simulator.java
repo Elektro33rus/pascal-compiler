@@ -273,6 +273,9 @@ public class Simulator {
     	}
     	else
     		te2.push(dataArrayTemp.clone());
+    	
+    	
+    	
     	andIf=false;
     	String temp = (String) stackNumber.pop();
     	input("\n;Label %"+temp+" ifthen\n");
@@ -740,11 +743,9 @@ public class Simulator {
     public static void pushi(){
         int val = getAddressValue();
 		String alloca = giveMeNumberVar();
-		//String temp = giveMeNumberVar();
     	if (startint) {
 	        input("%"+alloca+" = alloca i32\n"
 	    			+ "store i32 " + val +", i32* %"+alloca+"\n");
-	        //dataArrayTemp[dp] = alloca;
 	        stackNumber.push(alloca);
     	} else {
 	        input("%"+alloca+" = alloca double\n"

@@ -642,7 +642,7 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART
                 genAddress(lhsAddress);
             } 
             else
-            	throw new Error(String.format("Невозможно присвоить в тип (%s) тип (%s)", lhsType, rhsType));
+            	throw new Error(String.format("Невозможно преобразовать тип (%s) в тип (%s)", lhsType, rhsType));
         }
     }
     
