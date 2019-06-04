@@ -273,7 +273,6 @@ public class Simulator {
     	}
     	else
     		te2.push(dataArrayTemp.clone());
-    	
     	andIf=false;
     	String temp = (String) stackNumber.pop();
     	input("\n;Label %"+temp+" ifthen\n");
@@ -284,7 +283,7 @@ public class Simulator {
     	te2.push(dataArrayTemp.clone());
     	poryadok.add("else");
     	String temp = (String) giveMeNumberVar();
-    	stackNumber.push(temp);
+    	iff.push(temp);
     	String labelunknown = getIf();
     	input("br label %"+labelunknown+"\n");
     	input("\n;Label %"+temp+" ifelse\n");
@@ -306,11 +305,11 @@ public class Simulator {
     	
     	String labelexit = (String) giveMeNumberVar();
     	String criptoExitStart=iff.pop();
-    	if (stackNumber.isEmpty()) {
+    	if (iff.isEmpty()) {
     		AllProgram=AllProgram.replace(criptoExitStart, labelexit);
     	}
     	else {
-    		String labelElse = stackNumber.pop();
+    		String labelElse = iff.pop();
     		String criptoExitThen = iff.pop();
     		AllProgram=AllProgram.replace(criptoExitStart, labelexit);
     		AllProgram=AllProgram.replace(criptoExitThen, labelElse);
@@ -354,7 +353,6 @@ public class Simulator {
 	}
 
 	private static String vardecl = "";
-
 	private static void start() {
 		KolvoVar=0;
 		AllProgram+="\ndefine i32 @main() {\n";
@@ -368,25 +366,33 @@ public class Simulator {
     }
     
     private static boolean callint = true;
-    
 	private static void funccall() {
 		String kolvoparametrov = (String) stackNumber.pop();
 		String numberFunc = (String) stackNumber.pop();
-		String alloca = giveMeNumberVar();
 		String type;
 		if (callint) type="i32";
 		else type="double";
-		
-		input("%"+alloca+" = call "+type+" @Func"+numberFunc+"(");
 		for (int i=0; i<Integer.parseInt(kolvoparametrov);i++) {
-			String parametr = (String) stackNumber.firstElement();
+			String alloca = giveMeNumberVar();
+			String parametr = stackNumber.firstElement();
+			input("%"+alloca+" = load i32, i32* %"+parametr+"\n");
+			stackNumber.remove(0);
+			stackNumber.push(alloca);
+		}
+		String alloca2 = giveMeNumberVar();
+		input("%"+alloca2+" = call "+type+" @Func"+numberFunc+"(");
+		for (int i=0; i<Integer.parseInt(kolvoparametrov);i++) {
+			String parametr = stackNumber.firstElement();
 			stackNumber.remove(0);
 			input("i32 %"+parametr);
 			if (Integer.parseInt(kolvoparametrov)-1>i)
 				input(", ");
 		}
-		input(")\n");
-		stackNumber.push(alloca);
+		String alloca3 = giveMeNumberVar();
+		input(")\n"
+				+ "%"+alloca3+" = alloca i32\n"
+						+ "store i32 %"+alloca2+", i32* %"+alloca3+"\n");
+		stackNumber.push(alloca3);
 	}
     
 	private static boolean funcreturn = false;
@@ -400,7 +406,6 @@ public class Simulator {
     	dp = getAddressValue();
     	if (funcreturn) AllProgram+="ret double %"+dataArrayTemp[dp]+"\n}\n";
     	else AllProgram+="ret double "+0+"\n}\n";
-    	
 	}
     
     private static void funcstartint() {
@@ -409,14 +414,6 @@ public class Simulator {
     
     private static void funcstartreal() {
 		AllProgram+="define double @"+giveNameFunction()+"("+vardecl;
-	}
-
-	private static void lessEqlfor() {
-        Integer intVal2 = (Integer) stack.pop();
-        Float val2 = (float) intVal2;
-        Integer intVal1 = (Integer) stack.pop();
-        Float val1 = (float) intVal1;
-        stack.push(val1 <= val2);
 	}
 
     private static void get() {
@@ -462,22 +459,29 @@ public class Simulator {
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
         String alloca4 = giveMeNumberVar();
+        String alloca5 = getIf();
         input("%"+alloca+" = load i32, i32* %"+var1+"\n"
         		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
         		+ "%"+alloca3+" = icmp eq i32 %"+alloca+", %"+alloca2+"\n"
-        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %");
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n");
+        iff.push(alloca5);
         stackNumber.push(alloca4);
     }
 
     private static void neqlIf() {
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String temp = giveMeNumberVar();
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+temp+" = icmp ne i32 %"+t1+", %"+t2+"\n"
-            		+"br i1 %"+temp+", label %"+alloca+", label %");
-        stackNumber.push(alloca);
-        getAddressValue();
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        String alloca5 = getIf();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = icmp ne i32 %"+alloca+", %"+alloca2+"\n"
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n");
+        iff.push(alloca5);
+        stackNumber.push(alloca4);
     }
     
     private static void less() {
