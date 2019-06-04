@@ -191,6 +191,7 @@ public class Simulator {
                 	break;
                 case FORTO:
                 	String load1 = giveMeNumberVar();
+                	String load2 = giveMeNumberVar();
                 	String icmp = giveMeNumberVar();
                 	String forto = stackNumber.pop();
                 	String label1 = giveMeNumberVar();
@@ -199,7 +200,8 @@ public class Simulator {
                 	String probuu2 = tested.pop();
                 	
                 	input("%"+load1+" = load i32, i32* %"+probuu2+"\n"
-                			+ "%"+icmp+" = icmp slt i32 %"+load1+", "+forto+"\n"
+                			+ "%"+load2+" = load i32, i32* %"+forto+"\n"
+                			+ "%"+icmp+" = icmp sle i32 %"+load1+", %"+load2+"\n"
                 					+ "br i1 %"+icmp+", label %"+label1+", label %"+replaceLabel+"\n\n"
                 							+ ";Label (fordo) %"+label1+"\n");
                 	StackforTo.push(replaceLabel);
@@ -211,15 +213,15 @@ public class Simulator {
                 	String label2 = giveMeNumberVar();
                 	input("br label %"+label2+"\n\n"
                 			+ ";Label (+1) %"+label2+"\n");
-                	String load2 = giveMeNumberVar();
+                	String load3 = giveMeNumberVar();
                 	String add = giveMeNumberVar();
                 	String label3 = stackNumber.pop();
                 	String label4 = giveMeNumberVar();
                 	String replaceLabel2 = StackforTo.pop();
                 	AllProgram=AllProgram.replace(replaceLabel2, label4);
                 	String probuu = tested.pop();
-                	input("%"+load2+" = load i32, i32* %"+probuu+"\n"
-                			+ "%"+add+" = add nsw i32 %"+load2+", 1\n"
+                	input("%"+load3+" = load i32, i32* %"+probuu+"\n"
+                			+ "%"+add+" = add nsw i32 %"+load3+", 1\n"
                 					+ "store i32 %"+add+", i32* %"+probuu+"\n"
                 							+ "br label %"+label3+"\n\n"
                 									+ ";label (forend) %"+label4+"\n");
@@ -463,13 +465,17 @@ public class Simulator {
     }
 
     private static void eqlIf() {
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String temp = giveMeNumberVar();
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+temp+" = icmp eq i32 %"+t1+", %"+t2+"\n"
-            		+"br i1 %"+temp+", label %"+alloca+", label %");
-        stackNumber.push(alloca);
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = icmp eq i32 %"+alloca+", %"+alloca2+"\n"
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %");
+        stackNumber.push(alloca4);
     }
 
     private static void neqlIf() {
@@ -773,12 +779,10 @@ public class Simulator {
         String temp = (String) stackNumber.firstElement();
         stackNumber.remove(0);
         String alloca = giveMeNumberVar();
-        String load = giveMeNumberVar();
 
         vardecl+="%"+alloca+" = alloca i32\n"
-        		+ "store i32 %"+temp+", i32* %"+alloca+"\n"
-        				+ "%"+load+" = load i32, i32* %"+alloca+"\n";
-        dataArrayTemp[dp] = load;
+        		+ "store i32 %"+temp+", i32* %"+alloca+"\n";
+        dataArrayTemp[dp] = alloca;
     }
     
     public static void pushvarfunc(){

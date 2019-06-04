@@ -445,13 +445,17 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART
         if (symbol != null) {
         	match("TK_TO");
         	if (currentToken.getTokenType().equals("TK_INTLIT")) {
-                genOpCode(OP_CODE.PUSHINT);
+                genOpCode(OP_CODE.PUSHINTLIT);
                 genAddress(Integer.valueOf(currentToken.getTokenValue()));
                 genOpCode(OP_CODE.FORTO);
                 match("TK_INTLIT");
         	}
-        	else if (currentToken.getTokenType().equals("TK_IDENTIFIER"))
+        	else if (currentToken.getTokenType().equals("TK_IDENTIFIER")) {
+        		genOpCode(OP_CODE.PUSH);
+        		genAddress(findSymbol(currentToken).getAddress());
+        		genOpCode(OP_CODE.FORTO);
         		match("TK_IDENTIFIER");
+        	}
         	else throw new Error("Неверный тип данных для цикла for: "+currentToken.getTokenType());
         	match("TK_DO");
         	match("TK_BEGIN");
