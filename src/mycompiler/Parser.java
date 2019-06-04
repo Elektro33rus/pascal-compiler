@@ -94,7 +94,7 @@ PUSHRESULT,
 REPLACERESULT, ISCALLINT,
 ISCALLREAL, CALLINT, 
 FUNCVOID,
-FUNCRETURN, FORBEGIN, FORTO, FORSTART
+FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BREAK, CONTINUE
     }
     
 
@@ -334,7 +334,17 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART
                         currentToken.setTokenType(symbol.getTokenType());
                     }
                     else {
-                    	throw new Error(String.format("TK_IDENTIFIER '"+currentToken.getTokenValue()+"' is undefined"));
+                    	if (currentToken.getTokenValue().equals("break")) {
+                    		genOpCode(OP_CODE.BREAK);
+                    		match("TK_IDENTIFIER");
+                    	}
+                    	else
+                    		if (currentToken.getTokenValue().equals("continue")) {
+                    			genOpCode(OP_CODE.CONTINUE);
+                    			match("TK_IDENTIFIER");
+                    		}
+                    		else
+                    			throw new Error(String.format("TK_IDENTIFIER '"+currentToken.getTokenValue()+"' is undefined"));
                     }
                     break;
                 case "TK_A_FUNC_VAR":
@@ -469,30 +479,24 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART
 
     private static void whileStat() {
         match("TK_WHILE");
-        int target = ip;
         match("TK_OPEN_PARENTHESIS");
+        genOpCode(OP_CODE.WHILECMP);
         C();
         match("TK_CLOSE_PARENTHESIS");
         match("TK_DO");
-        genOpCode(OP_CODE.JFALSE);
-        int hole = ip;
-        genAddress(0);
         match("TK_BEGIN");
+        genOpCode(OP_CODE.WHILEBEGIN);
         statements();
         match("TK_END");
+        genOpCode(OP_CODE.WHILEEND);
         match("TK_SEMI_COLON");
-        genOpCode(OP_CODE.JMP);
-        genAddress(target);
-        int save = ip;
-        ip = hole;
-        genAddress(save);
-        ip = save;
     }
 
     public static void ifStat(){
         match("TK_IF");
         match("TK_OPEN_PARENTHESIS");
-        CIF();
+        genOpCode(OP_CODE.IFCMP);
+        C();
         match("TK_CLOSE_PARENTHESIS");
         match("TK_THEN");
         match("TK_BEGIN");
@@ -646,38 +650,6 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART
         }
     }
     
-    public static ArrayList<TYPE> CIF(){
-    	ArrayList<TYPE> type = new ArrayList<TYPE>();
-        do {
-        TYPE e1 = E();
-        while (currentToken.getTokenType().equals("TK_LESS_THAN") ||
-                currentToken.getTokenType().equals("TK_GREATER_THAN") ||
-                currentToken.getTokenType().equals("TK_LESS_THAN_EQUAL") ||
-                currentToken.getTokenType().equals("TK_GREATER_THAN_EQUAL") ||
-                currentToken.getTokenType().equals("TK_EQUAL") ||
-                currentToken.getTokenType().equals("TK_NOT_EQUAL")) {
-            String pred = currentToken.getTokenType();
-            match(pred);
-            TYPE e2 = T();
-            e1 = emitIf(pred, e1, e2);
-            type.add(e1);
-        }
-        if (currentToken.getTokenType().equals("TK_AND")) {
-        	genOpCode(OP_CODE.AND);
-        	getToken();
-        	continue;
-        } else if (currentToken.getTokenType().equals("TK_OR")) {
-        	genOpCode(OP_CODE.OR);
-        	getToken();
-        	continue;
-        }
-        else {
-        	break;
-        }
-        } while (true);
-        return type;
-    }
-
     public static ArrayList<TYPE> C(){
     	ArrayList<TYPE> type = new ArrayList<TYPE>();
         do {

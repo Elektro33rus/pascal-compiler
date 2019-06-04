@@ -1,21 +1,19 @@
 program zadaca;
-var o, n, x : integer;
+var y, n, x : integer;
 
-function fact(n : integer): integer;
 begin
-if (n = 1) then
-		begin
-			factresult:=1;
-		end;
-else
+
+x:=6;
+y:=0;
+
+while (y < 10) do
+begin
+	if (y = 5) then
 	begin
-		x:=n-1;
-		factresult:=fact(x)*n;
+		continue;
 	end;
+	y:=y+1;
+	writeln(y);
 end;
 
-begin
-n:=10;
-o:=fact(n);
-writeln(o);
 end.
