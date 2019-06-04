@@ -191,6 +191,7 @@ public class Simulator {
                 	break;
                 case FORTO:
                 	String load1 = giveMeNumberVar();
+                	String load2 = giveMeNumberVar();
                 	String icmp = giveMeNumberVar();
                 	String forto = stackNumber.pop();
                 	String label1 = giveMeNumberVar();
@@ -199,7 +200,8 @@ public class Simulator {
                 	String probuu2 = tested.pop();
                 	
                 	input("%"+load1+" = load i32, i32* %"+probuu2+"\n"
-                			+ "%"+icmp+" = icmp slt i32 %"+load1+", "+forto+"\n"
+                			+ "%"+load2+" = load i32, i32* %"+forto+"\n"
+                			+ "%"+icmp+" = icmp sle i32 %"+load1+", %"+load2+"\n"
                 					+ "br i1 %"+icmp+", label %"+label1+", label %"+replaceLabel+"\n\n"
                 							+ ";Label (fordo) %"+label1+"\n");
                 	StackforTo.push(replaceLabel);
@@ -211,15 +213,15 @@ public class Simulator {
                 	String label2 = giveMeNumberVar();
                 	input("br label %"+label2+"\n\n"
                 			+ ";Label (+1) %"+label2+"\n");
-                	String load2 = giveMeNumberVar();
+                	String load3 = giveMeNumberVar();
                 	String add = giveMeNumberVar();
                 	String label3 = stackNumber.pop();
                 	String label4 = giveMeNumberVar();
                 	String replaceLabel2 = StackforTo.pop();
                 	AllProgram=AllProgram.replace(replaceLabel2, label4);
                 	String probuu = tested.pop();
-                	input("%"+load2+" = load i32, i32* %"+probuu+"\n"
-                			+ "%"+add+" = add nsw i32 %"+load2+", 1\n"
+                	input("%"+load3+" = load i32, i32* %"+probuu+"\n"
+                			+ "%"+add+" = add nsw i32 %"+load3+", 1\n"
                 					+ "store i32 %"+add+", i32* %"+probuu+"\n"
                 							+ "br label %"+label3+"\n\n"
                 									+ ";label (forend) %"+label4+"\n");
@@ -254,37 +256,44 @@ public class Simulator {
     private static Stack<String> StackforTo = new Stack<String>();
     private static int forToo = 0;
     private static String getFor() {
-    	String get = "$$"+forToo;
+    	String get = "$$"+forToo+"$$";
     	forToo++;
     	return get;
     }
-    private static boolean isIfthen = false;
+    
     private static ArrayList<Boolean> isIfelse = new ArrayList<Boolean>();
-    private static int ifEnd = 0;
-    private static ArrayList<iffen> forIfthen = new ArrayList<iffen>();
-    private static ArrayList<iffen> forIfelse = new ArrayList<iffen>();
     private static ArrayList<String> poryadok = new ArrayList<String>();
+    private static Stack<String[]> te2 = new Stack<String[]>();
     
     private static void ifthen() {
     	poryadok.add("then");
+    	if (!te2.isEmpty()) {
+        	dataArrayTemp = te2.pop();
+        	te2.push(dataArrayTemp.clone());
+    	}
+    	else
+    		te2.push(dataArrayTemp.clone());
+    	
+    	
+    	
     	andIf=false;
     	String temp = (String) stackNumber.pop();
-		forIfthen.add(new iffen("\n;Label %"+temp+" ifthen\n", ""));
-		isIfthen = true;
+    	input("\n;Label %"+temp+" ifthen\n");
     }
     
     private static void ifelse() {
+    	dataArrayTemp = te2.pop();
+    	te2.push(dataArrayTemp.clone());
     	poryadok.add("else");
-    	isIfthen = false;
-    	isIfelse.add(true);
     	String temp = (String) giveMeNumberVar();
-    	stackNumber.push(temp);
-    	forIfelse.add(new iffen("\n;Label %"+temp+" ifelse\n", ""));
+    	iff.push(temp);
+    	String labelunknown = getIf();
+    	input("br label %"+labelunknown+"\n");
+    	input("\n;Label %"+temp+" ifelse\n");
+    	iff.push(labelunknown);
     }
     
     private static void ifend() {
-    	ifEnd++;
-    	
     	if (!forandIf.isEmpty()) {
     		String temp = (String) giveMeNumberVar();
     		for (int i=0; i<forandIf.size(); i++)
@@ -292,36 +301,26 @@ public class Simulator {
     		schetAnd=-1;
     		forandIf.clear();
     	}
+
+    	if (iff.size()!=1) {
+    		
+    	}
     	
-    	if (ifEnd == forIfthen.size()) {
-    		String temp = (String) giveMeNumberVar();
-    	while (!poryadok.isEmpty()) {
-    		if (poryadok.get(0).equals("then")) {
-    			boolean temp12 = true;
-    			if (!isIfelse.isEmpty()) {
-    				AllProgram+=stackNumber.pop()+"\n";
-    				isIfelse.remove(0);
-    				temp12 = false;
-    			}
-    			else
-    				AllProgram+=temp+"\n";
-        		AllProgram+=forIfthen.get(0).ifen;
-        		if (forIfthen.size()==1)
-        			AllProgram+="br label %"+temp+"\n";
-        		if (isIfelse.isEmpty() && temp12 && forIfelse.isEmpty()) {
-        			AllProgram+="\n;Label %"+temp+" ifend\n";
-        		}
-        		forIfthen.remove(0);
-    		}
-    		else {
-    			AllProgram+=forIfelse.get(0).ifen+"br label %"+temp+"\n";
-    			if (forIfelse.size()==1)
-    				AllProgram+="\n;Label %"+temp+" ifend\n";
-        		forIfelse.remove(0);
-    		}
-    		poryadok.remove(0);
+    	String labelexit = (String) giveMeNumberVar();
+    	String criptoExitStart=iff.pop();
+    	if (iff.isEmpty()) {
+    		AllProgram=AllProgram.replace(criptoExitStart, labelexit);
     	}
+    	else {
+    		String labelElse = iff.pop();
+    		String criptoExitThen = iff.pop();
+    		AllProgram=AllProgram.replace(criptoExitStart, labelexit);
+    		AllProgram=AllProgram.replace(criptoExitThen, labelElse);
     	}
+    	input("br label %"+labelexit+"\n");
+    	input("\n;Label %"+labelexit+" ifend\n");
+    	dataArrayTemp = te2.pop();
+    	te2.push(dataArrayTemp.clone());
     }
     
     private static int schetAnd=-1;
@@ -357,7 +356,6 @@ public class Simulator {
 	}
 
 	private static String vardecl = "";
-
 	private static void start() {
 		KolvoVar=0;
 		AllProgram+="\ndefine i32 @main() {\n";
@@ -371,25 +369,33 @@ public class Simulator {
     }
     
     private static boolean callint = true;
-    
 	private static void funccall() {
 		String kolvoparametrov = (String) stackNumber.pop();
 		String numberFunc = (String) stackNumber.pop();
-		String alloca = giveMeNumberVar();
 		String type;
 		if (callint) type="i32";
 		else type="double";
-		
-		input("%"+alloca+" = call "+type+" @Func"+numberFunc+"(");
 		for (int i=0; i<Integer.parseInt(kolvoparametrov);i++) {
-			String parametr = (String) stackNumber.firstElement();
+			String alloca = giveMeNumberVar();
+			String parametr = stackNumber.firstElement();
+			input("%"+alloca+" = load i32, i32* %"+parametr+"\n");
+			stackNumber.remove(0);
+			stackNumber.push(alloca);
+		}
+		String alloca2 = giveMeNumberVar();
+		input("%"+alloca2+" = call "+type+" @Func"+numberFunc+"(");
+		for (int i=0; i<Integer.parseInt(kolvoparametrov);i++) {
+			String parametr = stackNumber.firstElement();
 			stackNumber.remove(0);
 			input("i32 %"+parametr);
 			if (Integer.parseInt(kolvoparametrov)-1>i)
 				input(", ");
 		}
-		input(")\n");
-		stackNumber.push(alloca);
+		String alloca3 = giveMeNumberVar();
+		input(")\n"
+				+ "%"+alloca3+" = alloca i32\n"
+						+ "store i32 %"+alloca2+", i32* %"+alloca3+"\n");
+		stackNumber.push(alloca3);
 	}
     
 	private static boolean funcreturn = false;
@@ -403,7 +409,6 @@ public class Simulator {
     	dp = getAddressValue();
     	if (funcreturn) AllProgram+="ret double %"+dataArrayTemp[dp]+"\n}\n";
     	else AllProgram+="ret double "+0+"\n}\n";
-    	
 	}
     
     private static void funcstartint() {
@@ -412,14 +417,6 @@ public class Simulator {
     
     private static void funcstartreal() {
 		AllProgram+="define double @"+giveNameFunction()+"("+vardecl;
-	}
-
-	private static void lessEqlfor() {
-        Integer intVal2 = (Integer) stack.pop();
-        Float val2 = (float) intVal2;
-        Integer intVal1 = (Integer) stack.pop();
-        Float val1 = (float) intVal1;
-        stack.push(val1 <= val2);
 	}
 
     private static void get() {
@@ -459,24 +456,35 @@ public class Simulator {
     }
 
     private static void eqlIf() {
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String temp = giveMeNumberVar();
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+temp+" = icmp eq i32 %"+t1+", %"+t2+"\n"
-            		+"br i1 %"+temp+", label %"+alloca+", label %");
-        stackNumber.push(alloca);
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        String alloca5 = getIf();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = icmp eq i32 %"+alloca+", %"+alloca2+"\n"
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n");
+        iff.push(alloca5);
+        stackNumber.push(alloca4);
     }
 
     private static void neqlIf() {
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String temp = giveMeNumberVar();
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+temp+" = icmp ne i32 %"+t1+", %"+t2+"\n"
-            		+"br i1 %"+temp+", label %"+alloca+", label %");
-        stackNumber.push(alloca);
-        getAddressValue();
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        String alloca5 = getIf();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = icmp ne i32 %"+alloca+", %"+alloca2+"\n"
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n");
+        iff.push(alloca5);
+        stackNumber.push(alloca4);
     }
     
     private static void less() {
@@ -489,14 +497,27 @@ public class Simulator {
     }
 
     private static void lessIf() {
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String temp = giveMeNumberVar();
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+temp+" = icmp slt i32 %"+t1+", %"+t2+"\n"
-            		+"br i1 %"+temp+", label %"+alloca+", label %");
-        
-        stackNumber.push(alloca);
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        String alloca5 = getIf();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = icmp slt i32 %"+alloca+", %"+alloca2+"\n"
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n");
+        iff.push(alloca5);
+        stackNumber.push(alloca4);
+    }
+    
+    private static Stack<String> iff = new Stack<String>();
+    private static int forIf = 0;
+    private static String getIf() {
+    	String get = "$&"+forIf+"$&";
+    	forIf++;
+    	return get;
     }
    
     private static void greaterIf() {
@@ -530,19 +551,11 @@ public class Simulator {
     }
    
     private static String input(String text) {
-    	if (!isIfthen && isIfelse.isEmpty() && !andIf && !orIf) {
+    	if (isIfelse.isEmpty() && !andIf && !orIf) {
     		AllProgram+=text;
     		return "AllProgram";
     	}
-    	else
-    		if (isIfthen && isIfelse.isEmpty() && !andIf && !orIf) {
-    			forIfthen.set(forIfthen.size()-1, new iffen(forIfthen.get(forIfthen.size()-1).ifen+text, forIfthen.get(forIfthen.size()-1).number));
-    			return "isIfthen";
-    		}
-    		else if (!isIfelse.isEmpty() && !isIfthen && !andIf && !orIf){
-    			forIfelse.set(forIfelse.size()-1, new iffen(forIfelse.get(forIfelse.size()-1).ifen+text, ""));
-    			return "isIfelse";
-    		} else if (andIf){
+    	else if (andIf){
     			forandIf.set(schetAnd, forandIf.get(schetAnd)+text);
     			return "andIf";
     		} else if (orIf) {
@@ -553,11 +566,13 @@ public class Simulator {
     }
 
     private static void printReal() {
-        String alloca = giveMeNumberVar();
-    	String temp = (String) stackNumber.pop();
-        input("%"+alloca+" = call i32 (i8*, ...) "
+    	String alloca = giveMeNumberVar();
+    	String intVar = (String) stackNumber.pop();
+    	String alloca2 = giveMeNumberVar();
+        input("%"+alloca+" = load double, double* %"+intVar+"\n"
+        		+ "%"+alloca2+" = call i32 (i8*, ...) "
 				+ "@printf(i8* getelementptr inbounds ([4 x i8], "
-				+ "[4 x i8]* @.strfloat, i32 0, i32 0), double %"+temp+")\n");
+				+ "[4 x i8]* @.strfloat, i32 0, i32 0), i32 %"+alloca+")\n");
     }
     
     private static void printLn() {
@@ -587,8 +602,9 @@ public class Simulator {
         input("%"+alloca+" = load i32, i32* %"+var1+"\n"
         		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
         		+ "%"+alloca3+" = add i32 %"+alloca+", %"+alloca2+"\n"
-        				+ "%"+alloca4+" = alloca i32\n"
-        						+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        		+ "%"+alloca4+" = alloca i32\n"
+				+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        
         stackNumber.push(alloca4);
     }
 
@@ -601,11 +617,18 @@ public class Simulator {
     }
 
     public static void sub(){
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+alloca+" = sub i32 %"+t1+", %"+t2+"\n");
-        stackNumber.push(alloca);
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = sub i32 %"+alloca+", %"+alloca2+"\n"
+        				+ "%"+alloca4+" = alloca i32\n"
+        						+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        stackNumber.push(alloca4);
     }
 
     public static void fsub(){
@@ -622,16 +645,18 @@ public class Simulator {
     }
 
     public static void mult(){
-        int val1 = (int) stack.pop();
-        int val2 = (int) stack.pop();
-        
-        String t1 = (String) stackNumber.pop();
-        String t2 = (String) stackNumber.pop();
-        String alloca = (String) giveMeNumberVar();
-        input("%"+alloca+" = mul i32 %"+t1+", %"+t2+"\n");
-        stackNumber.push(alloca);
-        
-        stack.push(val1 * val2);
+        String var1 = (String) stackNumber.pop();
+        String var2 = (String) stackNumber.pop();
+        String alloca = giveMeNumberVar();
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = mul i32 %"+alloca+", %"+alloca2+"\n"
+        				+ "%"+alloca4+" = alloca i32\n"
+        						+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        stackNumber.push(alloca4);
     }
 
     public static void fmult(){
@@ -648,16 +673,18 @@ public class Simulator {
     }
 
     public static void div(){
-        int val2 = (int) stack.pop();
-        int val1 = (int) stack.pop();
-        
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String alloca = (String) giveMeNumberVar();
-        input("%"+alloca+" = div i32 %"+t1+", %"+t2+"\n");
-        stackNumber.push(alloca);
-        
-        stack.push(val1 / val2);
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
+        String alloca = giveMeNumberVar();
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = div i32 %"+alloca+", %"+alloca2+"\n"
+        				+ "%"+alloca4+" = alloca i32\n"
+        						+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        stackNumber.push(alloca4);
     }
     
     public static void fdiv(){
@@ -716,7 +743,6 @@ public class Simulator {
     public static void pushi(){
         int val = getAddressValue();
 		String alloca = giveMeNumberVar();
-		//String temp = giveMeNumberVar();
     	if (startint) {
 	        input("%"+alloca+" = alloca i32\n"
 	    			+ "store i32 " + val +", i32* %"+alloca+"\n");
@@ -751,12 +777,10 @@ public class Simulator {
         String temp = (String) stackNumber.firstElement();
         stackNumber.remove(0);
         String alloca = giveMeNumberVar();
-        String load = giveMeNumberVar();
 
         vardecl+="%"+alloca+" = alloca i32\n"
-        		+ "store i32 %"+temp+", i32* %"+alloca+"\n"
-        				+ "%"+load+" = load i32, i32* %"+alloca+"\n";
-        dataArrayTemp[dp] = load;
+        		+ "store i32 %"+temp+", i32* %"+alloca+"\n";
+        dataArrayTemp[dp] = alloca;
     }
     
     public static void pushvarfunc(){
@@ -791,11 +815,11 @@ public class Simulator {
     public static void pop(){
         String alloca = (String) stackNumber.pop();
         dp = getAddressValue();
-        //String alloca2 = giveMeNumberVar();
-
-        dataArrayTemp[dp] = alloca;
-        //input("%"+alloca2+" = load i32, i32* %"+alloca+"\n");
-        //stackNumber.push(alloca); //??
+        String alloca1 = giveMeNumberVar();
+        if (dataArrayTemp[dp]==null)
+        	dataArrayTemp[dp] = alloca;
+        input("%"+alloca1+" = load i32, i32* %"+alloca+"\n");
+        input("store i32 %"+alloca1+", i32* %"+dataArrayTemp[dp]+"\n");
     }
 
     public static void halt() {

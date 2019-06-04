@@ -1,14 +1,21 @@
 program zadaca;
-var y, i,x : integer;
+var o, n, x : integer;
+
+function fact(n : integer): integer;
+begin
+if (n = 1) then
+		begin
+			factresult:=1;
+		end;
+else
+	begin
+		x:=n-1;
+		factresult:=fact(x)*n;
+	end;
+end;
 
 begin
-
-for i:=0 to 10 do
-	begin
-		for y:=0 to 10 do
-		begin
-			x:=i+y;
-			writeln(x);
-		end;
-	end;
+n:=10;
+o:=fact(n);
+writeln(o);
 end.
