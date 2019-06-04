@@ -256,40 +256,42 @@ public class Simulator {
     private static Stack<String> StackforTo = new Stack<String>();
     private static int forToo = 0;
     private static String getFor() {
-    	String get = "$$"+forToo;
+    	String get = "$$"+forToo+"$$";
     	forToo++;
     	return get;
     }
-    private static boolean isIfthen = false;
+    
     private static ArrayList<Boolean> isIfelse = new ArrayList<Boolean>();
-    private static int ifEnd = 0;
-    private static ArrayList<iffen> forIfthen = new ArrayList<iffen>();
-    private static ArrayList<iffen> forIfelse = new ArrayList<iffen>();
     private static ArrayList<String> poryadok = new ArrayList<String>();
     private static Stack<String[]> te2 = new Stack<String[]>();
     
     private static void ifthen() {
     	poryadok.add("then");
-    	te2.push(dataArrayTemp.clone());
+    	if (!te2.isEmpty()) {
+        	dataArrayTemp = te2.pop();
+        	te2.push(dataArrayTemp.clone());
+    	}
+    	else
+    		te2.push(dataArrayTemp.clone());
+    	
     	andIf=false;
     	String temp = (String) stackNumber.pop();
-		forIfthen.add(new iffen("\n;Label %"+temp+" ifthen\n", ""));
-		isIfthen = true;
+    	input("\n;Label %"+temp+" ifthen\n");
     }
     
     private static void ifelse() {
     	dataArrayTemp = te2.pop();
     	te2.push(dataArrayTemp.clone());
     	poryadok.add("else");
-    	isIfthen = false;
-    	isIfelse.add(true);
     	String temp = (String) giveMeNumberVar();
     	stackNumber.push(temp);
-    	forIfelse.add(new iffen("\n;Label %"+temp+" ifelse\n", ""));
+    	String labelunknown = getIf();
+    	input("br label %"+labelunknown+"\n");
+    	input("\n;Label %"+temp+" ifelse\n");
+    	iff.push(labelunknown);
     }
     
     private static void ifend() {
-    	ifEnd++;
     	if (!forandIf.isEmpty()) {
     		String temp = (String) giveMeNumberVar();
     		for (int i=0; i<forandIf.size(); i++)
@@ -297,37 +299,20 @@ public class Simulator {
     		schetAnd=-1;
     		forandIf.clear();
     	}
-    	
-    	if (ifEnd == forIfthen.size()) {
-    		String temp = (String) giveMeNumberVar();
-    	while (!poryadok.isEmpty()) {
-    		if (poryadok.get(0).equals("then")) {
-    			boolean temp12 = true;
-    			if (!isIfelse.isEmpty()) {
-    				AllProgram+=stackNumber.pop()+"\n";
-    				isIfelse.remove(0);
-    				temp12 = false;
-    			}
-    			else
-    				AllProgram+=temp+"\n";
-        		AllProgram+=forIfthen.get(0).ifen;
-        		if (forIfthen.size()==1)
-        			AllProgram+="br label %"+temp+"\n";
-        		if (isIfelse.isEmpty() && temp12 && forIfelse.isEmpty()) {
-        			AllProgram+="\n;Label %"+temp+" ifend\n";
-        		}
-        		forIfthen.remove(0);
-    		}
-    		else {
-    			AllProgram+=forIfelse.get(0).ifen+"br label %"+temp+"\n";
-    			if (forIfelse.size()==1)
-    				AllProgram+="\n;Label %"+temp+" ifend\n";
-        		forIfelse.remove(0);
-    		}
-    		poryadok.remove(0);
+    	String temp = (String) giveMeNumberVar();
+    	input("br label %"+temp+"\n");
+    	input("\n;Label %"+temp+" ifend\n");
+    	String prob="";
+    	String prob1="";
+    	if (!stackNumber.isEmpty()) {
+    		prob = iff.pop();
+    		prob1 = stackNumber.pop();
+    		AllProgram=AllProgram.replace(prob, temp);
     	}
+    	prob = iff.pop();
+    	AllProgram=AllProgram.replace(prob, prob1);
     	dataArrayTemp = te2.pop();
-    	}
+    	te2.push(dataArrayTemp.clone());
     }
     
     private static int schetAnd=-1;
@@ -505,11 +490,21 @@ public class Simulator {
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
         String alloca4 = giveMeNumberVar();
+        String alloca5 = getIf();
         input("%"+alloca+" = load i32, i32* %"+var1+"\n"
         		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
         		+ "%"+alloca3+" = icmp slt i32 %"+alloca+", %"+alloca2+"\n"
-        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %");
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n");
+        iff.push(alloca5);
         stackNumber.push(alloca4);
+    }
+    
+    private static Stack<String> iff = new Stack<String>();
+    private static int forIf = 0;
+    private static String getIf() {
+    	String get = "$&"+forIf+"$&";
+    	forIf++;
+    	return get;
     }
    
     private static void greaterIf() {
@@ -543,19 +538,11 @@ public class Simulator {
     }
    
     private static String input(String text) {
-    	if (!isIfthen && isIfelse.isEmpty() && !andIf && !orIf) {
+    	if (isIfelse.isEmpty() && !andIf && !orIf) {
     		AllProgram+=text;
     		return "AllProgram";
     	}
-    	else
-    		if (isIfthen && isIfelse.isEmpty() && !andIf && !orIf) {
-    			forIfthen.set(forIfthen.size()-1, new iffen(forIfthen.get(forIfthen.size()-1).ifen+text, forIfthen.get(forIfthen.size()-1).number));
-    			return "isIfthen";
-    		}
-    		else if (!isIfelse.isEmpty() && !isIfthen && !andIf && !orIf){
-    			forIfelse.set(forIfelse.size()-1, new iffen(forIfelse.get(forIfelse.size()-1).ifen+text, ""));
-    			return "isIfelse";
-    		} else if (andIf){
+    	else if (andIf){
     			forandIf.set(schetAnd, forandIf.get(schetAnd)+text);
     			return "andIf";
     		} else if (orIf) {
