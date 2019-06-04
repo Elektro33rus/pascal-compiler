@@ -264,9 +264,11 @@ public class Simulator {
     private static ArrayList<iffen> forIfthen = new ArrayList<iffen>();
     private static ArrayList<iffen> forIfelse = new ArrayList<iffen>();
     private static ArrayList<String> poryadok = new ArrayList<String>();
+    private static Stack<String[]> te2 = new Stack<String[]>();
     
     private static void ifthen() {
     	poryadok.add("then");
+    	te2.push(dataArrayTemp.clone());
     	andIf=false;
     	String temp = (String) stackNumber.pop();
 		forIfthen.add(new iffen("\n;Label %"+temp+" ifthen\n", ""));
@@ -274,6 +276,16 @@ public class Simulator {
     }
     
     private static void ifelse() {
+    	String[] dataArrayTemp2 = te2.pop();
+    	for (int i=0;i<dataArrayTemp.length;i++) {
+    		if (dataArrayTemp[i]!=null) {
+    			if (dataArrayTemp2[i]==null) {
+    				dataArrayTemp2[i]=dataArrayTemp[i];
+    			}
+    		}
+    	}
+    	dataArrayTemp = dataArrayTemp2;
+    	te2.push(dataArrayTemp.clone());
     	poryadok.add("else");
     	isIfthen = false;
     	isIfelse.add(true);
@@ -320,6 +332,15 @@ public class Simulator {
     		}
     		poryadok.remove(0);
     	}
+    	String[] dataArrayTemp2 = te2.pop();
+    	for (int i=0;i<dataArrayTemp.length;i++) {
+    		if (dataArrayTemp[i]!=null) {
+    			if (dataArrayTemp2[i]==null) {
+    				dataArrayTemp2[i]=dataArrayTemp[i];
+    			}
+    		}
+    	}
+    	dataArrayTemp = dataArrayTemp2;
     	}
     }
     
@@ -591,8 +612,9 @@ public class Simulator {
         input("%"+alloca+" = load i32, i32* %"+var1+"\n"
         		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
         		+ "%"+alloca3+" = add i32 %"+alloca+", %"+alloca2+"\n"
-        				+ "%"+alloca4+" = alloca i32\n"
-        						+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        		+ "%"+alloca4+" = alloca i32\n"
+				+ "store i32 %"+alloca3+", i32* %"+alloca4+"\n");
+        
         stackNumber.push(alloca4);
     }
 
@@ -735,6 +757,7 @@ public class Simulator {
     	if (startint) {
 	        input("%"+alloca+" = alloca i32\n"
 	    			+ "store i32 " + val +", i32* %"+alloca+"\n");
+	        //dataArrayTemp[dp] = alloca;
 	        stackNumber.push(alloca);
     	} else {
 	        input("%"+alloca+" = alloca double\n"
@@ -806,11 +829,11 @@ public class Simulator {
     public static void pop(){
         String alloca = (String) stackNumber.pop();
         dp = getAddressValue();
-        //String alloca2 = giveMeNumberVar();
-
-        dataArrayTemp[dp] = alloca;
-        //input("%"+alloca2+" = load i32, i32* %"+alloca+"\n");
-        //stackNumber.push(alloca); //??
+        String alloca1 = giveMeNumberVar();
+        if (dataArrayTemp[dp]==null)
+        	dataArrayTemp[dp] = alloca;
+        input("%"+alloca1+" = load i32, i32* %"+alloca+"\n");
+        input("store i32 %"+alloca1+", i32* %"+dataArrayTemp[dp]+"\n");
     }
 
     public static void halt() {
