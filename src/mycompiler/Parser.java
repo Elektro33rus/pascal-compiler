@@ -6,14 +6,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Stack;
 
-import com.sun.prism.PixelFormat.DataType;
-
 public final class Parser {
     enum TYPE {
-        I, R, B, LN, S, P, F     // integer, real, boolean, string, procedure, function
+        I, R, B, LN, S, P, F
     }
 
-    private static int dp = 0; // data pointer for vars
+    private static int dp = 0;
 
     private static final HashMap<String, TYPE> STRING_TYPE_HASH_MAP;
     static {
@@ -25,78 +23,16 @@ public final class Parser {
     }
 
     enum OP_CODE {
-    PUSHINTLIT, //0
-    PUSH, //1
-    POP, //2
-    PUSHFLOATLIT, //3 
-    JMP, //4
-    JFALSE, //5
-    JTRUE, //6
-    CVR, //7
-    CVI, //8
-    DUP, //9
-    XCHG, //10
-    REMOVE, //11
-    ADD, //12
-    SUB, //13
-    MULT, //14
-    DIV, //15
-    NEG, //16
-    OR, //17
-    AND, //18
-    FADD,  //19
-    FSUB, //20
-    FMULT, //21 
-    FDIV, //22
-    FNEG, //23
-    EQL,  //24
-    NEQL,  //25
-    GEQ,  //26
-    LEQ, //27
-    GTR, //28
-    LSS, //29
-    FGTR, //30
-    FLSS, //31
-    HALT, //32
-    PRINT_INT, //33
-    PRINT_CHAR, //34
-    PRINT_BOOL, //35
-    PRINT_REAL, //36
-    PRINT_NEWLINE, //37
-    GET, //38
-    PUT, //39
-    JMPTOFUNCTION, //40
-    IFTHEN, //41
-    IFELSE, //42
-    IFEND, //43
-    JMPOUTFUNCTION, //44 
-    FOREND, // 45
-    LEQFOR, // 46
-    EQLIF,  // 47
-    NEQLIF,  // 48
-    GEQIF,  //49
-    LEQIF, //50
-    GTRIF, //51
-    LSSIF, //52
-    FGTRIF, //53
-    FLSSIF //54
-, PUSHREAL //55
-, FUNCTIONSTART, FUNCTIONCALL,
-FUNCTIONEND, STARTPROGRAM, 
-INTVAR, REALVAR, ENDVARDECL,
-PUSHVARFUNC, CALLNUMBER, PUSHINT, COMMA, PUSHDATA,
-PUSHVARFROMDECL, FUNCTIONENDVOID, 
-FUNCTIONENDINT, FUNCTIONENDREAL,
-FUNCTIONSTARTINT, FUNCTIONSTARTREAL, 
-STARTVARDECL, 
-POPRESULT,
-PUSHRESULT,
-REPLACERESULT, ISCALLINT,
-ISCALLREAL, CALLINT, 
-FUNCVOID,
-FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BREAK, CONTINUE
+    PUSHINTLIT, PUSH, POP, PUSHFLOATLIT, JMP, JFALSE, JTRUE, CVR, CVI, DUP, XCHG, REMOVE, ADD, SUB, MULT, DIV,
+    NEG, OR, AND, FADD, FSUB, FMULT, FDIV, FNEG, EQL, NEQL, GEQ, LEQ, GTR, LSS,
+    FGTR, FLSS, HALT, PRINT_INT, PRINT_CHAR, PRINT_BOOL, PRINT_REAL, PRINT_NEWLINE,  GET, PUT,
+    JMPTOFUNCTION, IFTHEN, IFELSE, IFEND, JMPOUTFUNCTION, FOREND, LEQFOR, EQLIF, NEQLIF, GEQIF, LEQIF,
+    GTRIF, LSSIF, FGTRIF, FLSSIF, PUSHREAL, FUNCTIONSTART, FUNCTIONCALL, FUNCTIONEND, STARTPROGRAM, 
+    INTVAR, REALVAR, ENDVARDECL, PUSHVARFUNC, CALLNUMBER, PUSHINT, COMMA, PUSHDATA, PUSHVARFROMDECL, FUNCTIONENDVOID, 
+    FUNCTIONENDINT, FUNCTIONENDREAL, FUNCTIONSTARTINT, FUNCTIONSTARTREAL, STARTVARDECL, POPRESULT, PUSHRESULT,
+    REPLACERESULT, ISCALLINT, ISCALLREAL, CALLINT, FUNCVOID, FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, 
+    WHILEBEGIN, WHILEEND, IFCMP, BREAK, CONTINUE
     }
-    
 
     private static final int ADDRESS_SIZE = 4;
 
@@ -107,7 +43,7 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
     private static Byte[] byteArray = new Byte[INSTRUCTION_SIZE];
     private static int ip = 0;
     public static Byte[] parse() {
-        getToken(); // Get initial token
+        getToken();
         match("TK_PROGRAM");
         match("TK_IDENTIFIER");
         match("TK_SEMI_COLON");
@@ -436,9 +372,9 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
         			+"' (пришло "+kolvo+" нужно "+symbol.getAmount()+")");
         }
     	genOpCode(OP_CODE.PUSHINT);
-    	genAddress(callnumber); //какую функцию вызвать
+    	genAddress(callnumber);
     	genOpCode(OP_CODE.PUSHINT);
-    	genAddress(kolvo); //количество переменных в вызове функции example: func(5, 4, 3, 2, 1);
+    	genAddress(kolvo);
         genOpCode(OP_CODE.FUNCTIONCALL);
 	}
 
@@ -635,13 +571,12 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
             			match("TK_A_FUNC_VAR");
             match("TK_ASSIGNMENT");
             TYPE rhsType = E();
-
             if (lhsType == rhsType) {
                 genOpCode(OP_CODE.POP);
                 genAddress(lhsAddress);
             } 
             else if (lhsType == TYPE.R && rhsType == TYPE.I) {
-            	//genOpCode(OP_CODE.CVR);
+            	//genOpCode(OP_CODE.CVR); ?????
                 genOpCode(OP_CODE.POP);
                 genAddress(lhsAddress);
             } 
@@ -731,7 +666,6 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                         currentToken.setTokenType("TK_A_VAR");
                         genOpCode(OP_CODE.PUSH);
                         genAddress(symbol.getAddress());
-
                         match("TK_A_VAR");
                         return symbol.getDataType();
                     }
@@ -1007,7 +941,6 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
     }
 
     public static void genAddress(int a){
-//        System.out.println(String.format("ADDRESS_VALUE: %s", a));
         byte[] intBytes = ByteBuffer.allocate(ADDRESS_SIZE).putInt(a).array();
         for (byte b: intBytes) {
             byteArray[ip++] = b;
@@ -1015,7 +948,6 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
     }
 
     public static void genAddress(float a){
-//        System.out.println(String.format("ADDRESS_VALUE: %s", a));
         byte[] intBytes = ByteBuffer.allocate(ADDRESS_SIZE).putFloat(a).array();
         for (byte b: intBytes) {
             byteArray[ip++] = b;

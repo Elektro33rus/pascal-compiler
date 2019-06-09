@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Stack;
 
-public class Simulator {
+public class Generator {
 
     private static int ip = 0;
     private static int dp = 0;
@@ -953,6 +953,6 @@ public class Simulator {
     }
 
     public static void setInstructions(Byte[] instructions) {
-        Simulator.instructions = instructions;
+        Generator.instructions = instructions;
     }
 }
