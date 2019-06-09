@@ -1,4 +1,4 @@
-program zadaca;
+program example;
 var y, n, x : integer;
 
 begin
