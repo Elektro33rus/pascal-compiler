@@ -93,16 +93,13 @@ public final class Parser {
             match("TK_CLOSE_PARENTHESIS");
             match("TK_COLON");
             String TK_RESULT = currentToken.getTokenType();
-            if (TK_RESULT.equals("TK_INTEGER")) {
+            if (TK_RESULT.equals("TK_INTEGER"))
             	genOpCode(OP_CODE.FUNCTIONSTARTINT);
-            }
             else {
-            	if (TK_RESULT.equals("TK_REAL")) {
+            	if (TK_RESULT.equals("TK_REAL"))
                 	genOpCode(OP_CODE.FUNCTIONSTARTREAL);
-            	}
-            	else {
-            		throw new Error("Функция '"+function+"' возвращает неизвестный результат (может быть int or real)");
-            	}
+            	else
+            		throw new Error("Функция '"+function+"' возвращает неизвестный результат (может быть int или real)");
             }
             getToken();
             Region = function;
@@ -111,9 +108,8 @@ public final class Parser {
                     STRING_TYPE_HASH_MAP.get(TK_RESULT.toLowerCase().substring(3)),
                     dp);
             dp += 4;
-            if (SymbolTable.lookup(functionResult, symbolFunctionResult.getRegion()) == null) {
+            if (SymbolTable.lookup(functionResult, symbolFunctionResult.getRegion()) == null)
                 SymbolTable.insert(symbolFunctionResult);
-            } 
             match("TK_SEMI_COLON");
             Symbol symbolFunction = new Symbol(function,
                     "TK_A_FUNC", "Global",
@@ -123,12 +119,10 @@ public final class Parser {
             symbolFunction.setAmount(kolvoparametrov);
             Region = function;
             declarations();
-            if (SymbolTable.lookup(function, "Global") == null) {
+            if (SymbolTable.lookup(function, "Global") == null)
                 SymbolTable.insert(symbolFunction);
-            }
-            else {
+            else
             	throw new Error(String.format("Функция '"+function + "' уже объявлена!"));
-            }
             match("TK_BEGIN");
             Region = function;
             statements();
@@ -138,11 +132,9 @@ public final class Parser {
             	genOpCode(OP_CODE.FUNCTIONENDINT);
             	genAddress(symbolFunctionResult.getAddress());
             }
-            else {
-            	if (TK_RESULT.equals("TK_REAL")) {
+            else
+            	if (TK_RESULT.equals("TK_REAL"))
                 	genOpCode(OP_CODE.FUNCTIONENDREAL);
-            	}
-            }
         }
     }
 
@@ -156,9 +148,8 @@ public final class Parser {
                 currentToken.setTokenType("TK_A_FUNC_VAR");
                 variablesArrayList.add(currentToken);
                 match("TK_A_FUNC_VAR");
-                if ("TK_COMMA".equals(currentToken.getTokenType())) {
+                if ("TK_COMMA".equals(currentToken.getTokenType()))
                     match("TK_COMMA");
-                }
             }
             if (variablesArrayList.size()==0)
             	break;
@@ -168,9 +159,8 @@ public final class Parser {
             int temp=0;
             for (Token var : variablesArrayList) {
             	temp++;
-            	if (dataType.equals("TK_INTEGER")) {
+            	if (dataType.equals("TK_INTEGER"))
             		genOpCode(OP_CODE.INTVAR);
-            	}
             	else
                 	if (dataType.equals("TK_REAL"))
                 		genOpCode(OP_CODE.REALVAR);
@@ -183,13 +173,11 @@ public final class Parser {
                     SymbolTable.insert(symbol);
                     forvar.add(symbol);
                 }
-                if (variablesArrayList.size()!=temp) {
+                if (variablesArrayList.size()!=temp)
                 	genOpCode(OP_CODE.COMMA);
-                }
             }
-            if (!currentToken.getTokenValue().equals("TK_CLOSE_PARENTHESIS")) {
+            if (!currentToken.getTokenValue().equals("TK_CLOSE_PARENTHESIS"))
             	break;
-            }
         }
         genOpCode(OP_CODE.ENDVARDECL);
     	for (int i=0; i<forvar.size();i++) {
@@ -202,19 +190,17 @@ public final class Parser {
     
     public static void varDeclarations() {
         while(true) {
-            if ("TK_VAR".equals(currentToken.getTokenType())) {
+            if ("TK_VAR".equals(currentToken.getTokenType()))
                 match("TK_VAR");
-            } else {
+            else
                 break;
-            }
             ArrayList<Token> variablesArrayList = new ArrayList<>();
             while ("TK_IDENTIFIER".equals(currentToken.getTokenType())) {
                 currentToken.setTokenType("TK_A_VAR");
                 variablesArrayList.add(currentToken);
                 match("TK_A_VAR");
-                if ("TK_COMMA".equals(currentToken.getTokenType())) {
+                if ("TK_COMMA".equals(currentToken.getTokenType()))
                     match("TK_COMMA");
-                }
             }
             match("TK_COLON");
             String dataType = currentToken.getTokenType();
@@ -265,10 +251,8 @@ public final class Parser {
                 	break;
                 case "TK_IDENTIFIER":
                 	Symbol symbol = findSymbol();
-                    if (symbol != null && (symbol.getRegion().equals(Region) || symbol.getRegion().equals("Global") 
-                    		|| symbol.getRegion().equals("FUNCVAR"+Region))) {
+                    if (symbol != null && (symbol.getRegion().equals(Region) || symbol.getRegion().equals("Global") || symbol.getRegion().equals("FUNCVAR"+Region)))
                         currentToken.setTokenType(symbol.getTokenType());
-                    }
                     else {
                     	if (currentToken.getTokenValue().equals("break")) {
                     		genOpCode(OP_CODE.BREAK);
@@ -325,14 +309,12 @@ public final class Parser {
 	                	genAddress(parametr.getAddress());
 	                }
 	                match("TK_A_VAR");
-		            if (currentToken.getTokenType().equals("TK_COMMA")) {
+		            if (currentToken.getTokenType().equals("TK_COMMA"))
 		            	match(currentToken.getTokenType());
-		            }
 	        } else {
 	            t = getLitType(currentToken.getTokenType());
-	            if (t == null) {
+	            if (t == null)
 	            	throw new Error("'"+currentToken.getTokenValue()+"' is not defined");
-	            }
 	            assert t != null;
 	            switch (t) {
 	                case R:
@@ -345,11 +327,10 @@ public final class Parser {
 	                    break;
 	                case B:
 	                    genOpCode(OP_CODE.PUSHINTLIT);
-	                    if (currentToken.getTokenValue().equals("true")) {
+	                    if (currentToken.getTokenValue().equals("true"))
 	                        genAddress(1);
-	                    } else {
+	                    else
 	                        genAddress(0);
-	                    }
 	                    break;
 	                case LN:
 	                	break;
@@ -357,20 +338,17 @@ public final class Parser {
 	                    throw new Error("Cannot write unknown type");
 	            }
 	            match(currentToken.getTokenType());
-	            if (currentToken.getTokenType().equals("TK_COMMA")) {
+	            if (currentToken.getTokenType().equals("TK_COMMA"))
 	            	match(currentToken.getTokenType());
-	            }
 	        }
         }
         match("TK_CLOSE_PARENTHESIS");
-        if (kolvo<symbol.getAmount()) {
+        if (kolvo<symbol.getAmount())
         	throw new Error("Недостаточно аргументов для вызова функции '"+symbol.getName()
         			+"' (пришло "+kolvo+" нужно "+symbol.getAmount()+")");
-        }
-        if (kolvo>symbol.getAmount()) {
+        if (kolvo>symbol.getAmount())
         	throw new Error("Слишком много аргументов для вызова функции '"+symbol.getName()
         			+"' (пришло "+kolvo+" нужно "+symbol.getAmount()+")");
-        }
     	genOpCode(OP_CODE.PUSHINT);
     	genAddress(callnumber);
     	genOpCode(OP_CODE.PUSHINT);
@@ -452,23 +430,19 @@ public final class Parser {
     
     private static Symbol findSymbol() {
     	Symbol symbol = SymbolTable.lookup(currentToken.getTokenValue(), "FUNCVAR"+Region);
-    	if (symbol == null) {
+    	if (symbol == null)
     		symbol = SymbolTable.lookup(currentToken.getTokenValue(), Region);
-    	}
-        if (symbol == null) {
+        if (symbol == null)
         	symbol =  SymbolTable.lookup(currentToken.getTokenValue(), "Global");
-        }
         return symbol;
     }
     
     private static Symbol findSymbol(Token token) {
     	Symbol symbol = SymbolTable.lookup(token.getTokenValue(), "FUNCVAR"+Region);
-    	if (symbol == null) {
+    	if (symbol == null)
     		symbol = SymbolTable.lookup(token.getTokenValue(), Region);
-    	}
-        if (symbol == null) {
+        if (symbol == null)
         	symbol =  SymbolTable.lookup(token.getTokenValue(), "Global");
-        }
         return symbol;
     }
 
@@ -489,13 +463,11 @@ public final class Parser {
                     	genOpCode(OP_CODE.PUSH);
                     	genAddress(symbol.getAddress());
                     }
-                                
                     match("TK_A_VAR");
             } else {
                 t = getLitType(currentToken.getTokenType());
-                if (t == null) {
+                if (t == null)
                 	throw new Error("'"+currentToken.getTokenValue()+"' is not defined");
-                }
                 assert t != null;
                 switch (t) {
                     case R:
@@ -508,11 +480,10 @@ public final class Parser {
                         break;
                     case B:
                         genOpCode(OP_CODE.PUSHINTLIT);
-                        if (currentToken.getTokenValue().equals("true")) {
+                        if (currentToken.getTokenValue().equals("true"))
                             genAddress(1);
-                        } else {
+                        else
                             genAddress(0);
-                        }
                         break;
                     case LN:
                     	break;
@@ -574,7 +545,7 @@ public final class Parser {
             if (lhsType == rhsType) {
                 genOpCode(OP_CODE.POP);
                 genAddress(lhsAddress);
-            } 
+            }
             else if (lhsType == TYPE.R && rhsType == TYPE.I) {
             	//genOpCode(OP_CODE.CVR); ?????
                 genOpCode(OP_CODE.POP);
@@ -610,10 +581,10 @@ public final class Parser {
         	getToken();
         	continue;
         }
-        else {
+        else
         	break;
         }
-        } while (true);
+        while (true);
         return type;
     }
 
@@ -685,14 +656,12 @@ public final class Parser {
                     		genOpCode(OP_CODE.PUSH);
                     	else if (varFunctionResult.getDataType().equals(TYPE.R))
                     		genOpCode(OP_CODE.PUSHREAL);
-                    	
                     	genAddress(varFunctionResult.getAddress());
                         return varFunctionResult.getDataType();
                     }
                 }
-                else {
+                else
                     throw new Error(String.format("Неизвестная переменная '%s'", currentToken.getTokenValue()));
-                }
             case "TK_INTLIT":
                 genOpCode(OP_CODE.PUSHINTLIT);
                 genAddress(Integer.valueOf(currentToken.getTokenValue()));
@@ -942,30 +911,26 @@ public final class Parser {
 
     public static void genAddress(int a){
         byte[] intBytes = ByteBuffer.allocate(ADDRESS_SIZE).putInt(a).array();
-        for (byte b: intBytes) {
+        for (byte b: intBytes)
             byteArray[ip++] = b;
-        }
     }
 
     public static void genAddress(float a){
         byte[] intBytes = ByteBuffer.allocate(ADDRESS_SIZE).putFloat(a).array();
-        for (byte b: intBytes) {
+        for (byte b: intBytes)
             byteArray[ip++] = b;
-        }
     }
 
     public static void getToken() {
-        if (it.hasNext()) {
+        if (it.hasNext())
             currentToken =  it.next();
-        }
     }
 
     public static void match(String tokenType) {
-        if (!tokenType.equals(currentToken.getTokenType())) {
+        if (!tokenType.equals(currentToken.getTokenType()))
             throw new Error(String.format("Token type (%s) does not match current token type (%s)", tokenType, currentToken.getTokenType()));
-        } else {
+        else
             getToken();
-        }
     }
 
     public static TYPE getLitType(String tokenType) {
