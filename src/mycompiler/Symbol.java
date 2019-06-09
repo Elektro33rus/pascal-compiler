@@ -5,19 +5,16 @@ public class Symbol {
     private String tokenType = "";
     private Parser.TYPE dataType = null;
     private int address;
-    private int returnAddress; // return address for procedure
+    private int returnAddress;
     private String Region = "";
     private int number;
     private int amount;
     private boolean result = false;
     
-    private Object low; // low value range for array
-    private Object high; // high value range for array
+    private Parser.TYPE indexType;
+    private Parser.TYPE valueType;
 
-    private Parser.TYPE indexType; // index type for array
-    private Parser.TYPE valueType; // value type for array
-
-    Symbol next; // pointer to the next entry in the symbolTable bucket list
+    Symbol next;
 
     public Symbol(String name, String tokenType, String Region, Parser.TYPE dataType, int address){
         this.name = name;
@@ -93,22 +90,6 @@ public class Symbol {
 
     public void setReturnAddress(int returnAddress) {
         this.returnAddress = returnAddress;
-    }
-
-    public Object getLow() {
-        return low;
-    }
-
-    public void setLow(Object low) {
-        this.low = low;
-    }
-
-    public Object getHigh() {
-        return high;
-    }
-
-    public void setHigh(Object high) {
-        this.high = high;
     }
 
     public Parser.TYPE getIndexType() {

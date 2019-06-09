@@ -3,8 +3,8 @@ package mycompiler;
 public final class SymbolTable {
 
     static class Scope {
-        Symbol[] symbolTable = new Symbol[HASH_TABLE_SIZE]; // symbol table for the current scope
-        Scope next = null; // pointer to the next outer scope
+        Symbol[] symbolTable = new Symbol[HASH_TABLE_SIZE];
+        Scope next = null;
     }
 
     private static final int HASH_TABLE_SIZE = 211;
@@ -15,15 +15,11 @@ public final class SymbolTable {
         int hashValueRegion = hash(symbol.getRegion());
         int temp = hashValue + hashValueRegion;
         Symbol bucketCursor = headerScope.symbolTable[temp];
-        if (bucketCursor == null) {
-            // Empty bucket
+        if (bucketCursor == null)
             headerScope.symbolTable[temp] = symbol;
-        } else {
-            // Existing Symbols in bucket
-            while (bucketCursor.next != null) {
+        else {
+            while (bucketCursor.next != null)
                 bucketCursor = bucketCursor.next;
-            }
-            // Append symbol at the end of the bucket
             bucketCursor.next = symbol;
         }
     }
@@ -36,31 +32,26 @@ public final class SymbolTable {
         Scope scopeCursor = headerScope;
         while (scopeCursor != null) {
             while (bucketCursor != null) {
-                if (bucketCursor.getName().equals(symbolName) && bucketCursor.getRegion().equals(regionName)) {
+                if (bucketCursor.getName().equals(symbolName) && bucketCursor.getRegion().equals(regionName))
                     return bucketCursor;
-                }
                 bucketCursor = bucketCursor.next;
             }
             scopeCursor = scopeCursor.next;
         }
-        // Symbol does not exist
         return null;
     }
 
     public static int hash(String symbolName) {
         int h = 0;
-        for (int i = 0; i < symbolName.length(); i++) {
+        for (int i = 0; i < symbolName.length(); i++)
             h = h + h + symbolName.charAt(i);
-        }
         h = h % HASH_TABLE_SIZE/2;
         return h;
     }
 
     public static void openScope() {
         Scope innerScope = new Scope();
-        // Add new scope to the headerScope
         innerScope.next = headerScope;
-        // Move headerScope to the front of the Scope linked list
         headerScope = innerScope;
     }
 

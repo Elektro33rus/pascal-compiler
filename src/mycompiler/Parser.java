@@ -51,7 +51,6 @@ public final class Parser {
         return byteArray;
     }
 
-
     public static void program() {
     	Region = "Global";
         declarations();
@@ -156,9 +155,9 @@ public final class Parser {
             match("TK_COLON");
             String dataType = currentToken.getTokenType();
             match(dataType);
-            int temp=0;
+            int kolvoVarFunc=0;
             for (Token var : variablesArrayList) {
-            	temp++;
+            	kolvoVarFunc++;
             	if (dataType.equals("TK_INTEGER"))
             		genOpCode(OP_CODE.INTVAR);
             	else
@@ -173,7 +172,7 @@ public final class Parser {
                     SymbolTable.insert(symbol);
                     forvar.add(symbol);
                 }
-                if (variablesArrayList.size()!=temp)
+                if (variablesArrayList.size()!=kolvoVarFunc)
                 	genOpCode(OP_CODE.COMMA);
             }
             if (!currentToken.getTokenValue().equals("TK_CLOSE_PARENTHESIS"))
@@ -264,7 +263,7 @@ public final class Parser {
                     			match("TK_IDENTIFIER");
                     		}
                     		else
-                    			throw new Error(String.format("TK_IDENTIFIER '"+currentToken.getTokenValue()+"' is undefined"));
+                    			throw new Error(String.format("TK_IDENTIFIER '"+currentToken.getTokenValue()+"' νε ξαϊÿβλεν"));
                     }
                     break;
                 case "TK_A_FUNC_VAR":
