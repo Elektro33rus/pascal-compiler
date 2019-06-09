@@ -80,33 +80,53 @@ public class Simulator {
                 case HALT:
                     halt();
                     break;
-                case EQLIF:
-                    eqlIf();
+                case EQL:
+                    eql(IsIf);
                 	break;
-                case NEQLIF:
-                    neqlIf();
-                    break;
-                case LSSIF:
-                    lessIf();
+                case NEQL:
+                    neql(IsIf);
                     break;
                 case LSS:
-                	less();
+                    less(IsIf);
+                    break;
+                case LEQ:
+                    lessEql(IsIf);
+                    break;
+                case GTR:
+                    greater(IsIf);
+                    break;
+                case GEQ:
+                    greaterEql(IsIf);
+                    break;
+                case WHILECMP:
+                	IsIf=false;
+                	String label5 = giveMeNumberVar();
+                	input("br label %"+label5+"\n\n"
+                			+ ";Label %"+label5+"\n");
+                	stackNumber.push(label5);
                 	break;
-                case LEQIF:
-                    lessEqlIf();
-                    break;
-                case GTRIF:
-                    greaterIf();
-                    break;
-                case GEQIF:
-                    greaterEqlIf();
-                    break;
-                case JFALSE:
-                    jfalse();
-                    break;
-                case JTRUE:
-                    jtrue();
-                    break;
+                case WHILEBEGIN:
+                	String label6 = stackNumber.pop();
+                	input(";Label %"+label6+"\n");
+                	break;
+                case WHILEEND:
+                	String label7 = giveMeNumberVar();
+                	String label8 = stackNumber.pop();
+                	
+                	input("br label %"+label8+"\n");
+                	if (!continueStackLabels.isEmpty()) {
+                		String replaceLabel = continueStackLabels.pop();
+                		AllProgram = AllProgram.replace(replaceLabel, label8);
+                	}
+                	
+                	input("\n;Label %"+label7+"\n");
+                	String replaceLabel3 = whileStackLabels.pop();
+                	AllProgram = AllProgram.replace(replaceLabel3, label7);
+                	if (!breakStackLabels.isEmpty()) {
+                		String replaceLabel = breakStackLabels.pop();
+                		AllProgram = AllProgram.replace(replaceLabel, label7);
+                	}
+                	break;
                 case ADD:
                     add();
                     break;
@@ -196,15 +216,13 @@ public class Simulator {
                 	String forto = stackNumber.pop();
                 	String label1 = giveMeNumberVar();
                 	String replaceLabel = getFor();
-                	
                 	String probuu2 = tested.pop();
-                	
                 	input("%"+load1+" = load i32, i32* %"+probuu2+"\n"
                 			+ "%"+load2+" = load i32, i32* %"+forto+"\n"
                 			+ "%"+icmp+" = icmp sle i32 %"+load1+", %"+load2+"\n"
                 					+ "br i1 %"+icmp+", label %"+label1+", label %"+replaceLabel+"\n\n"
                 							+ ";Label (fordo) %"+label1+"\n");
-                	StackforTo.push(replaceLabel);
+                	forStackLabels.push(replaceLabel);
                 	tested.push(probuu2);
                 	break;
                 case FORBEGIN:
@@ -217,7 +235,7 @@ public class Simulator {
                 	String add = giveMeNumberVar();
                 	String label3 = stackNumber.pop();
                 	String label4 = giveMeNumberVar();
-                	String replaceLabel2 = StackforTo.pop();
+                	String replaceLabel2 = forStackLabels.pop();
                 	AllProgram=AllProgram.replace(replaceLabel2, label4);
                 	String probuu = tested.pop();
                 	input("%"+load3+" = load i32, i32* %"+probuu+"\n"
@@ -225,6 +243,9 @@ public class Simulator {
                 					+ "store i32 %"+add+", i32* %"+probuu+"\n"
                 							+ "br label %"+label3+"\n\n"
                 									+ ";label (forend) %"+label4+"\n");
+                	break;
+                case IFCMP:
+                	IsIf=true;
                 	break;
                 case IFTHEN:
                 	ifthen();
@@ -235,6 +256,18 @@ public class Simulator {
                 case IFEND:
                 	ifend();
                     break;
+                case BREAK:
+                	IsNotBreak = false;
+                	String label9 = getBreak();
+                    input("br label %"+label9+"\n");
+                    breakStackLabels.push(label9);
+                	break;
+                case CONTINUE:
+                	IsNotContinue = false;
+                	String label10 = getContinue();
+                    input("br label %"+label10+"\n");
+                    continueStackLabels.push(label10);
+                	break;
                 default:
                     throw new Error(String.format("Unhandled case: %s", opCode));
             }
@@ -243,21 +276,30 @@ public class Simulator {
     }
     
     private static Stack<String> tested = new Stack<String>();
+    private static boolean IsIf = true;
     
-	static class iffen{
-    	String ifen;
-    	String number;
-    	iffen (String Ifen, String Number){
-    		this.ifen = Ifen;
-    		this.number = Number;
-    	}
+    private static Stack<String> continueStackLabels = new Stack<String>();
+    private static int continueInt = 0;
+    private static String getContinue() {
+    	String get = "$CONTINUE"+continueInt+"CONTINUE$";
+    	continueInt++;
+    	return get;
     }
     
-    private static Stack<String> StackforTo = new Stack<String>();
-    private static int forToo = 0;
+    
+    private static Stack<String> breakStackLabels = new Stack<String>();
+    private static int breakInt = 0;
+    private static String getBreak() {
+    	String get = "$BREAK"+breakInt+"BREAK$";
+    	breakInt++;
+    	return get;
+    }
+    
+    private static Stack<String> forStackLabels = new Stack<String>();
+    private static int forInt = 0;
     private static String getFor() {
-    	String get = "$$"+forToo+"$$";
-    	forToo++;
+    	String get = "$$"+forInt+"$$";
+    	forInt++;
     	return get;
     }
     
@@ -273,12 +315,9 @@ public class Simulator {
     	}
     	else
     		te2.push(dataArrayTemp.clone());
-    	
-    	
-    	
     	andIf=false;
     	String temp = (String) stackNumber.pop();
-    	input("\n;Label %"+temp+" ifthen\n");
+    	input(";Label %"+temp+" ifthen\n");
     }
     
     private static void ifelse() {
@@ -286,11 +325,11 @@ public class Simulator {
     	te2.push(dataArrayTemp.clone());
     	poryadok.add("else");
     	String temp = (String) giveMeNumberVar();
-    	iff.push(temp);
-    	String labelunknown = getIf();
+    	ifStackLabels.push(temp);
+    	String labelunknown = getIfLabel();
     	input("br label %"+labelunknown+"\n");
     	input("\n;Label %"+temp+" ifelse\n");
-    	iff.push(labelunknown);
+    	ifStackLabels.push(labelunknown);
     }
     
     private static void ifend() {
@@ -301,23 +340,27 @@ public class Simulator {
     		schetAnd=-1;
     		forandIf.clear();
     	}
-
-    	if (iff.size()!=1) {
-    		
-    	}
-    	
     	String labelexit = (String) giveMeNumberVar();
-    	String criptoExitStart=iff.pop();
-    	if (iff.isEmpty()) {
+    	String criptoExitStart=ifStackLabels.pop();
+    	if (ifStackLabels.isEmpty()) {
     		AllProgram=AllProgram.replace(criptoExitStart, labelexit);
     	}
     	else {
-    		String labelElse = iff.pop();
-    		String criptoExitThen = iff.pop();
+    		String labelElse = ifStackLabels.pop();
+    		String criptoExitThen = ifStackLabels.pop();
     		AllProgram=AllProgram.replace(criptoExitStart, labelexit);
     		AllProgram=AllProgram.replace(criptoExitThen, labelElse);
     	}
-    	input("br label %"+labelexit+"\n");
+    	if (IsNotBreak && IsNotContinue) {
+    		input("br label %"+labelexit+"\n");
+    	}
+    	else {
+    		if (!IsNotBreak)
+    			IsNotBreak = true;
+    		if (!IsNotContinue)
+    			IsNotContinue = true;
+    	}
+
     	input("\n;Label %"+labelexit+" ifend\n");
     	dataArrayTemp = te2.pop();
     	te2.push(dataArrayTemp.clone());
@@ -326,6 +369,8 @@ public class Simulator {
     private static int schetAnd=-1;
     private static ArrayList<String> forandIf = new ArrayList<String>();
     private static boolean andIf = false;
+    private static boolean IsNotBreak = true;
+    private static boolean IsNotContinue = true;
     
     private static void and() {
     	schetAnd++;
@@ -439,115 +484,158 @@ public class Simulator {
         return val;
     }
 
-    private static void jtrue() {
-        if (stack.pop().toString().equals("true")){
-            ip = getAddressValue();
-        } else {
-            getAddressValue();
-        }
-    }
-
-    private static void jfalse() {
-    	if (stack.pop().toString().equals("false")){
-            ip = getAddressValue();
-        } else {
-            getAddressValue();
-        }
-    }
-
-    private static void eqlIf() {
+    private static void eql(boolean IsIf) {
         String var2 = (String) stackNumber.pop();
         String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
         String alloca4 = giveMeNumberVar();
-        String alloca5 = getIf();
+        String alloca5;
+        if (IsIf)
+        	alloca5 = getIfLabel();
+        else
+        	alloca5 = getWhileLabel();
         input("%"+alloca+" = load i32, i32* %"+var1+"\n"
         		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
         		+ "%"+alloca3+" = icmp eq i32 %"+alloca+", %"+alloca2+"\n"
-        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n");
-        iff.push(alloca5);
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n\n");
+        if (IsIf)
+        	ifStackLabels.push(alloca5);
+        else
+        	whileStackLabels.push(alloca5);
         stackNumber.push(alloca4);
     }
 
-    private static void neqlIf() {
+    private static void neql(boolean IsIf) {
         String var2 = (String) stackNumber.pop();
         String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
         String alloca4 = giveMeNumberVar();
-        String alloca5 = getIf();
+        String alloca5;
+        if (IsIf)
+        	alloca5 = getIfLabel();
+        else
+        	alloca5 = getWhileLabel();
         input("%"+alloca+" = load i32, i32* %"+var1+"\n"
         		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
         		+ "%"+alloca3+" = icmp ne i32 %"+alloca+", %"+alloca2+"\n"
-        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n");
-        iff.push(alloca5);
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n\n");
+        if (IsIf)
+        	ifStackLabels.push(alloca5);
+        else
+        	whileStackLabels.push(alloca5);
         stackNumber.push(alloca4);
     }
     
-    private static void less() {
-        Integer intVal2 = (Integer) stack.pop();
-        Float val2 = (float) intVal2;
-        Integer intVal1 = (Integer) stack.pop();
-        Float val1 = (float) intVal1;
-      
-        stack.push(val1 < val2);
+    private static Stack<String> whileStackLabels = new Stack<String>();
+    private static int WhileInt = 0;
+    private static String getWhileLabel() {
+    	String get = "$WHILE"+WhileInt+"WHILE$";
+    	WhileInt++;
+    	return get;
     }
 
-    private static void lessIf() {
+    private static void less(boolean IsIf) {
         String var2 = (String) stackNumber.pop();
         String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
         String alloca4 = giveMeNumberVar();
-        String alloca5 = getIf();
+        String alloca5;
+        if (IsIf)
+        	alloca5 = getIfLabel();
+        else
+        	alloca5 = getWhileLabel();
         input("%"+alloca+" = load i32, i32* %"+var1+"\n"
         		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
         		+ "%"+alloca3+" = icmp slt i32 %"+alloca+", %"+alloca2+"\n"
-        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n");
-        iff.push(alloca5);
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n\n");
+        if (IsIf)
+        	ifStackLabels.push(alloca5);
+        else
+        	whileStackLabels.push(alloca5);
         stackNumber.push(alloca4);
     }
     
-    private static Stack<String> iff = new Stack<String>();
-    private static int forIf = 0;
-    private static String getIf() {
-    	String get = "$&"+forIf+"$&";
-    	forIf++;
+    private static Stack<String> ifStackLabels = new Stack<String>();
+    private static int IfInt = 0;
+    private static String getIfLabel() {
+    	String get = "$IF"+IfInt+"IF&";
+    	IfInt++;
     	return get;
     }
    
-    private static void greaterIf() {
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String temp = giveMeNumberVar();
+    private static void greater(boolean IsIf) {
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+temp+" = icmp sgt i32 %"+t1+", %"+t2+"\n"
-            		+"br i1 %"+temp+", label %"+alloca+", label %");
-        stackNumber.push(alloca);
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        String alloca5;
+        if (IsIf)
+        	alloca5 = getIfLabel();
+        else
+        	alloca5 = getWhileLabel();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = icmp sgt i32 %"+alloca+", %"+alloca2+"\n"
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n\n");
+        if (IsIf)
+        	ifStackLabels.push(alloca5);
+        else
+        	whileStackLabels.push(alloca5);
+        stackNumber.push(alloca4);
     }
 
-    private static void lessEqlIf() {
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String temp = giveMeNumberVar();
+    private static void lessEql(boolean IsIf) {
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+temp+" = icmp sle i32 %"+t1+", %"+t2+"\n"
-            		+"br i1 %"+temp+", label %"+alloca+", label %");
-        stackNumber.push(alloca);
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        String alloca5;
+        if (IsIf)
+        	alloca5 = getIfLabel();
+        else
+        	alloca5 = getWhileLabel();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = icmp sle i32 %"+alloca+", %"+alloca2+"\n"
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n\n");
+        if (IsIf)
+        	ifStackLabels.push(alloca5);
+        else
+        	whileStackLabels.push(alloca5);
+        stackNumber.push(alloca4);
     }
 
-    private static void greaterEqlIf() {
-        String t2 = (String) stackNumber.pop();
-        String t1 = (String) stackNumber.pop();
-        String temp = giveMeNumberVar();
+    private static void greaterEql(boolean IsIf) {
+        String var2 = (String) stackNumber.pop();
+        String var1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
-        input("%"+temp+" = icmp sge i32 %"+t1+", %"+t2+"\n"
-            		+"br i1 %"+temp+", label %"+alloca+", label %");
-        stackNumber.push(alloca);
+        String alloca2 = giveMeNumberVar();
+        String alloca3 = giveMeNumberVar();
+        String alloca4 = giveMeNumberVar();
+        String alloca5;
+        if (IsIf)
+        	alloca5 = getIfLabel();
+        else
+        	alloca5 = getWhileLabel();
+        input("%"+alloca+" = load i32, i32* %"+var1+"\n"
+        		+ "%"+alloca2+" = load i32, i32* %"+var2+"\n"
+        		+ "%"+alloca3+" = icmp sge i32 %"+alloca+", %"+alloca2+"\n"
+        						+ "br i1 %"+alloca3+", label %"+alloca4+", label %"+alloca5+"\n\n");
+        if (IsIf)
+        	ifStackLabels.push(alloca5);
+        else
+        	whileStackLabels.push(alloca5);
+        stackNumber.push(alloca4);
     }
    
     private static String input(String text) {
