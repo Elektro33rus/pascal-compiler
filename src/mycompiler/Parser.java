@@ -86,12 +86,11 @@ public final class Parser {
             String TK_RESULT = currentToken.getTokenType();
             if (TK_RESULT.equals("TK_INTEGER"))
             	genOpCode(OP_CODE.FUNCTIONSTARTINT);
-            else {
+            else
             	if (TK_RESULT.equals("TK_REAL"))
                 	genOpCode(OP_CODE.FUNCTIONSTARTREAL);
             	else
             		throw new Error("Функция '"+function+"' возвращает неизвестный результат (может быть int или real)");
-            }
             getToken();
             Region = function;
             Symbol symbolFunctionResult = new Symbol(functionResult,
