@@ -11,7 +11,6 @@ public class Generator {
     private static int ip = 0;
     private static int dp = 0;
 
-    private static Stack<Object> stack = new Stack<>();
     private static Stack<String> stackNumber = new Stack<>();
     private static String[] dataArrayTemp = new String[1000];
     private static Byte[] dataArray = new Byte[1000];
@@ -672,16 +671,11 @@ public class Generator {
     }
 
     public static void fsub(){
-        float val2 = (float) stack.pop();
-        float val1 = (float) stack.pop();
-        
         String t2 = (String) stackNumber.pop();
         String t1 = (String) stackNumber.pop();
         String alloca = giveMeNumberVar();
         AllProgram+="%"+alloca+" = fsub double %"+t1+", %"+t2+"\n";
         stackNumber.push(alloca);
-        
-        stack.push(val1 - val2);
     }
 
     public static void mult(){
@@ -700,16 +694,11 @@ public class Generator {
     }
 
     public static void fmult(){
-        float val1 = (float) stack.pop();
-        float val2 = (float) stack.pop();
-        
         String t1 = (String) stackNumber.pop();
         String t2 = (String) stackNumber.pop();
         String alloca = (String) giveMeNumberVar();
         AllProgram+="%"+alloca+" = fmul double %"+t1+", %"+t2+"\n";
         stackNumber.push(alloca);
-        
-        stack.push(val1 * val2);
     }
 
     public static void div(){
@@ -728,41 +717,26 @@ public class Generator {
     }
     
     public static void fdiv(){
-        float val2 = (float) stack.pop();
-        float val1 = (float) stack.pop();
-        
         String t2 = (String) stackNumber.pop();
         String t1 = (String) stackNumber.pop();
         String alloca = (String) giveMeNumberVar();
         AllProgram+="%"+alloca+" = fdiv double %"+t1+", %"+t2+"\n";
         stackNumber.push(alloca);
-        
-        stack.push(val1 / val2);
     }
 
     public static void cvr(){
-        float val = Float.valueOf(String.valueOf(stack.pop()));
-        
         String temp = (String) stackNumber.pop();
         String alloca = (String) giveMeNumberVar();
         AllProgram+="%"+alloca+" = sitofp i32 %"+temp+" to double\n";
         stackNumber.push(alloca);
-
-        stack.push(val);
     }
 
     public static void xchg(){
-        Object val1 = stack.pop();
-        Object val2 = stack.pop();
-        
         String t1 = stackNumber.pop();
         String t2 = stackNumber.pop();
         
         stackNumber.push(t1);
         stackNumber.push(t2);
-        
-        stack.push(val1);
-        stack.push(val2);
     }
     
     private static int KolvoVar=0;
@@ -792,13 +766,11 @@ public class Generator {
 	    			+ "store double " + val +", double* %"+alloca+"\n";
 	        stackNumber.push(alloca);
     	}
-        stack.push(val);
     }
     
     public static void pushint(){
         int val = getAddressValue();
         stackNumber.push(String.valueOf(val));
-        stack.push(val);
     }
     
     private static void pushf() {
@@ -809,7 +781,6 @@ public class Generator {
     			+ "store double " + val +", double* %"+alloca+"\n"
     			+ "%"+load+" = load double, double* %"+alloca+"\n";
         stackNumber.push(load);
-        stack.push(val);
     }
 
     public static void pushvarfromdecl(){
