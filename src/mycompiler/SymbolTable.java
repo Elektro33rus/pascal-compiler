@@ -7,16 +7,16 @@ public final class SymbolTable {
         Scope next = null;
     }
 
-    private static final int HASH_TABLE_SIZE = 211;
+    private static final int HASH_TABLE_SIZE = 256;
     private static Scope headerScope = new Scope();
     
     public static void insert(Symbol symbol) {
-        int hashValue = hash(symbol.getName());
+        int hashValueName = hash(symbol.getName());
         int hashValueRegion = hash(symbol.getRegion());
-        int temp = hashValue + hashValueRegion;
-        Symbol bucketCursor = headerScope.symbolTable[temp];
+        int hash = hashValueName + hashValueRegion;
+        Symbol bucketCursor = headerScope.symbolTable[hash];
         if (bucketCursor == null)
-            headerScope.symbolTable[temp] = symbol;
+            headerScope.symbolTable[hash] = symbol;
         else {
             while (bucketCursor.next != null)
                 bucketCursor = bucketCursor.next;
@@ -25,10 +25,10 @@ public final class SymbolTable {
     }
 
     public static Symbol lookup(String symbolName, String regionName) {
-        int hashValue = hash(symbolName);
+        int hashValueName = hash(symbolName);
         int hashValueRegion = hash(regionName);
-        int temp = hashValue + hashValueRegion;
-        Symbol bucketCursor = headerScope.symbolTable[temp];
+        int hash = hashValueName + hashValueRegion;
+        Symbol bucketCursor = headerScope.symbolTable[hash];
         Scope scopeCursor = headerScope;
         while (scopeCursor != null) {
             while (bucketCursor != null) {
@@ -44,7 +44,8 @@ public final class SymbolTable {
     public static int hash(String symbolName) {
         int h = 0;
         for (int i = 0; i < symbolName.length(); i++)
-            h = h + h + symbolName.charAt(i);
+            h = h + h  + symbolName.charAt(i);
+        h*=197;
         h = h % HASH_TABLE_SIZE/2;
         return h;
     }

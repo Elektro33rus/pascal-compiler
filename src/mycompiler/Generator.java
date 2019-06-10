@@ -56,12 +56,6 @@ public class Generator {
                 case POP:
                     pop();
                     break;
-                case GET:
-                    get();
-                    break;
-                case PUT:
-                    put();
-                    break;
                 case CVR:
                     cvr();
                     break;
@@ -99,33 +93,14 @@ public class Generator {
                     greaterEql(IsIf);
                     break;
                 case WHILECMP:
-                	IsIf=false;
-                	String label5 = giveMeNumberVar();
-                	input("br label %"+label5+"\n\n"
-                			+ ";Label %"+label5+"\n");
-                	stackNumber.push(label5);
+                	whilecmp();
                 	break;
                 case WHILEBEGIN:
                 	String label6 = stackNumber.pop();
                 	input(";Label %"+label6+"\n");
                 	break;
                 case WHILEEND:
-                	String label7 = giveMeNumberVar();
-                	String label8 = stackNumber.pop();
-                	
-                	input("br label %"+label8+"\n");
-                	if (!continueStackLabels.isEmpty()) {
-                		String replaceLabel = continueStackLabels.pop();
-                		AllProgram = AllProgram.replace(replaceLabel, label8);
-                	}
-                	
-                	input("\n;Label %"+label7+"\n");
-                	String replaceLabel3 = whileStackLabels.pop();
-                	AllProgram = AllProgram.replace(replaceLabel3, label7);
-                	if (!breakStackLabels.isEmpty()) {
-                		String replaceLabel = breakStackLabels.pop();
-                		AllProgram = AllProgram.replace(replaceLabel, label7);
-                	}
+                	whileend();
                 	break;
                 case ADD:
                     add();
@@ -195,54 +170,15 @@ public class Generator {
                 	vardecl+="){\n";
                 	break;
                 case FORSTART:
-                	dp = getAddressValue();
-                	String load = giveMeNumberVar();
-                	String alloca = giveMeNumberVar();
-                	String popStack = dataArrayTemp[dp];
-                	String label = giveMeNumberVar();
-                	input("\n;ForStart\n%"+load + " = load i32, i32* %"+popStack+"\n"
-                			+ "%"+alloca+" = alloca i32\n"
-                			+ "store i32 %"+load+", i32* %"+alloca+"\n"
-                					+ "br label %"+label+"\n\n"
-                							+ ";label (forcmp) %"+label+"\n");
-                	dataArrayTemp[dp]=alloca;
-                	tested.push(alloca);
-                	stackNumber.push(label);
+                	forstart();
                 	break;
                 case FORTO:
-                	String load1 = giveMeNumberVar();
-                	String load2 = giveMeNumberVar();
-                	String icmp = giveMeNumberVar();
-                	String forto = stackNumber.pop();
-                	String label1 = giveMeNumberVar();
-                	String replaceLabel = getFor();
-                	String probuu2 = tested.pop();
-                	input("%"+load1+" = load i32, i32* %"+probuu2+"\n"
-                			+ "%"+load2+" = load i32, i32* %"+forto+"\n"
-                			+ "%"+icmp+" = icmp sle i32 %"+load1+", %"+load2+"\n"
-                					+ "br i1 %"+icmp+", label %"+label1+", label %"+replaceLabel+"\n\n"
-                							+ ";Label (fordo) %"+label1+"\n");
-                	forStackLabels.push(replaceLabel);
-                	tested.push(probuu2);
+                	forto();
                 	break;
                 case FORBEGIN:
                 	break;
                 case FOREND:
-                	String label2 = giveMeNumberVar();
-                	input("br label %"+label2+"\n\n"
-                			+ ";Label (+1) %"+label2+"\n");
-                	String load3 = giveMeNumberVar();
-                	String add = giveMeNumberVar();
-                	String label3 = stackNumber.pop();
-                	String label4 = giveMeNumberVar();
-                	String replaceLabel2 = forStackLabels.pop();
-                	AllProgram=AllProgram.replace(replaceLabel2, label4);
-                	String probuu = tested.pop();
-                	input("%"+load3+" = load i32, i32* %"+probuu+"\n"
-                			+ "%"+add+" = add nsw i32 %"+load3+", 1\n"
-                					+ "store i32 %"+add+", i32* %"+probuu+"\n"
-                							+ "br label %"+label3+"\n\n"
-                									+ ";label (forend) %"+label4+"\n");
+                	forend();
                 	break;
                 case IFCMP:
                 	IsIf=true;
@@ -257,22 +193,108 @@ public class Generator {
                 	ifend();
                     break;
                 case BREAK:
-                	IsNotBreak = false;
-                	String label9 = getBreak();
-                    input("br label %"+label9+"\n");
-                    breakStackLabels.push(label9);
+                	breaK();
                 	break;
                 case CONTINUE:
-                	IsNotContinue = false;
-                	String label10 = getContinue();
-                    input("br label %"+label10+"\n");
-                    continueStackLabels.push(label10);
+                	continuE();
                 	break;
                 default:
                     throw new Error(String.format("Unhandled case: %s", opCode));
             }
         }
         while (opCode != Parser.OP_CODE.HALT);
+    }
+    
+    private static void whilecmp() {
+    	IsIf=false;
+    	String label5 = giveMeNumberVar();
+    	input("br label %"+label5+"\n\n"
+    			+ ";Label %"+label5+"\n");
+    	stackNumber.push(label5);
+    }
+    
+    private static void continuE() {
+    	IsNotContinue = false;
+    	String label10 = getContinue();
+        input("br label %"+label10+"\n");
+        continueStackLabels.push(label10);
+    }
+    
+    private static void breaK() {
+    	IsNotBreak = false;
+    	String label9 = getBreak();
+        input("br label %"+label9+"\n");
+        breakStackLabels.push(label9);
+    }
+    
+    private static void forstart() {
+    	dp = getAddressValue();
+    	String load = giveMeNumberVar();
+    	String alloca = giveMeNumberVar();
+    	String popStack = dataArrayTemp[dp];
+    	String label = giveMeNumberVar();
+    	input("\n;ForStart\n%"+load + " = load i32, i32* %"+popStack+"\n"
+    			+ "%"+alloca+" = alloca i32\n"
+    			+ "store i32 %"+load+", i32* %"+alloca+"\n"
+    					+ "br label %"+label+"\n\n"
+    							+ ";label (forcmp) %"+label+"\n");
+    	dataArrayTemp[dp]=alloca;
+    	tested.push(alloca);
+    	stackNumber.push(label);
+    }
+    
+    private static void forend() {
+    	String label2 = giveMeNumberVar();
+    	input("br label %"+label2+"\n\n"
+    			+ ";Label (+1) %"+label2+"\n");
+    	String load3 = giveMeNumberVar();
+    	String add = giveMeNumberVar();
+    	String label3 = stackNumber.pop();
+    	String label4 = giveMeNumberVar();
+    	String replaceLabel2 = forStackLabels.pop();
+    	AllProgram=AllProgram.replace(replaceLabel2, label4);
+    	String probuu = tested.pop();
+    	input("%"+load3+" = load i32, i32* %"+probuu+"\n"
+    			+ "%"+add+" = add nsw i32 %"+load3+", 1\n"
+    					+ "store i32 %"+add+", i32* %"+probuu+"\n"
+    							+ "br label %"+label3+"\n\n"
+    									+ ";label (forend) %"+label4+"\n");
+    }
+    
+    private static void forto() {
+    	String load1 = giveMeNumberVar();
+    	String load2 = giveMeNumberVar();
+    	String icmp = giveMeNumberVar();
+    	String forto = stackNumber.pop();
+    	String label1 = giveMeNumberVar();
+    	String replaceLabel = getFor();
+    	String probuu2 = tested.pop();
+    	input("%"+load1+" = load i32, i32* %"+probuu2+"\n"
+    			+ "%"+load2+" = load i32, i32* %"+forto+"\n"
+    			+ "%"+icmp+" = icmp sle i32 %"+load1+", %"+load2+"\n"
+    					+ "br i1 %"+icmp+", label %"+label1+", label %"+replaceLabel+"\n\n"
+    							+ ";Label (fordo) %"+label1+"\n");
+    	forStackLabels.push(replaceLabel);
+    	tested.push(probuu2);
+    }
+    
+    private static void whileend(){
+    	String label7 = giveMeNumberVar();
+    	String label8 = stackNumber.pop();
+    	
+    	input("br label %"+label8+"\n");
+    	if (!continueStackLabels.isEmpty()) {
+    		String replaceLabel = continueStackLabels.pop();
+    		AllProgram = AllProgram.replace(replaceLabel, label8);
+    	}
+    	
+    	input("\n;Label %"+label7+"\n");
+    	String replaceLabel3 = whileStackLabels.pop();
+    	AllProgram = AllProgram.replace(replaceLabel3, label7);
+    	if (!breakStackLabels.isEmpty()) {
+    		String replaceLabel = breakStackLabels.pop();
+    		AllProgram = AllProgram.replace(replaceLabel, label7);
+    	}
     }
     
     private static Stack<String> tested = new Stack<String>();
@@ -285,7 +307,6 @@ public class Generator {
     	continueInt++;
     	return get;
     }
-    
     
     private static Stack<String> breakStackLabels = new Stack<String>();
     private static int breakInt = 0;
@@ -926,25 +947,22 @@ public class Generator {
 
     public static int getAddressValue() {
         byte[] valArray = new byte[4];
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++)
             valArray[i] = instructions[ip++];
-        }
         return ByteBuffer.wrap(valArray).getInt();
     }
 
     public static float getFloatValue() {
         byte[] valArray = new byte[4];
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++)
             valArray[i] = instructions[ip++];
-        }
         return ByteBuffer.wrap(valArray).getFloat();
     }
 
     public static int getData(int dp) {
     	byte[] valArray = new byte[4];
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++)
 			valArray[i] = dataArray[dp++];
-		}
         return ByteBuffer.wrap(valArray).getInt();
     }
 

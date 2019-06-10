@@ -23,15 +23,7 @@ public final class Parser {
     }
 
     enum OP_CODE {
-    PUSHINTLIT, PUSH, POP, PUSHFLOATLIT, JMP, JFALSE, JTRUE, CVR, CVI, DUP, XCHG, REMOVE, ADD, SUB, MULT, DIV,
-    NEG, OR, AND, FADD, FSUB, FMULT, FDIV, FNEG, EQL, NEQL, GEQ, LEQ, GTR, LSS,
-    FGTR, FLSS, HALT, PRINT_INT, PRINT_CHAR, PRINT_BOOL, PRINT_REAL, PRINT_NEWLINE,  GET, PUT,
-    JMPTOFUNCTION, IFTHEN, IFELSE, IFEND, JMPOUTFUNCTION, FOREND, LEQFOR, EQLIF, NEQLIF, GEQIF, LEQIF,
-    GTRIF, LSSIF, FGTRIF, FLSSIF, PUSHREAL, FUNCTIONSTART, FUNCTIONCALL, FUNCTIONEND, STARTPROGRAM, 
-    INTVAR, REALVAR, ENDVARDECL, PUSHVARFUNC, CALLNUMBER, PUSHINT, COMMA, PUSHDATA, PUSHVARFROMDECL, FUNCTIONENDVOID, 
-    FUNCTIONENDINT, FUNCTIONENDREAL, FUNCTIONSTARTINT, FUNCTIONSTARTREAL, STARTVARDECL, POPRESULT, PUSHRESULT,
-    REPLACERESULT, ISCALLINT, ISCALLREAL, CALLINT, FUNCVOID, FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, 
-    WHILEBEGIN, WHILEEND, IFCMP, BREAK, CONTINUE
+		STARTPROGRAM, FUNCTIONSTARTINT, FUNCTIONSTARTREAL, FUNCTIONENDINT, FUNCTIONENDREAL, STARTVARDECL, INTVAR, REALVAR, COMMA, ENDVARDECL, PUSHVARFROMDECL, HALT, BREAK, CONTINUE, PUSHREAL, PUSH, PUSHFLOATLIT, PUSHINTLIT, PUSHINT, FUNCTIONCALL, FORSTART, FORTO, FORBEGIN, FOREND, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, IFTHEN, IFELSE, IFEND, PRINT_INT, PRINT_REAL, PRINT_NEWLINE, FUNCRETURN, POP, AND, OR, PUSHVARFUNC, ISCALLINT, ISCALLREAL, REPLACERESULT, ADD, XCHG, CVR, FADD, SUB, FSUB, MULT, FMULT, FDIV, DIV, LSSIF, LSS, GTR, LEQ, GEQ, EQL, NEQL
     }
 
     private static final int ADDRESS_SIZE = 4;
@@ -499,9 +491,6 @@ public final class Parser {
                 case R:
                     genOpCode(OP_CODE.PRINT_REAL);
                     break;
-                case B:
-                    genOpCode(OP_CODE.PRINT_BOOL);
-                    break;
                 case LN:
                 	genOpCode(OP_CODE.PRINT_NEWLINE);
                 	break;
@@ -694,101 +683,6 @@ public final class Parser {
             default:
                 throw new Error("Unknown data type");
         }
-    }
-    
-    public static TYPE emitIf(String op, TYPE t1, TYPE t2){
-        switch (op) {
-            case "TK_PLUS":
-                if (t1 == TYPE.I && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.ADD);
-                    return TYPE.I;
-                } else if (t1 == TYPE.I && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FADD);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FADD);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.FADD);
-                    return TYPE.R;
-                }
-            case "TK_MINUS":
-                if (t1 == TYPE.I && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.SUB);
-                    return TYPE.I;
-                } else if (t1 == TYPE.I && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FSUB);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FSUB);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.FSUB);
-                    return TYPE.R;
-                }
-            case "TK_MULTIPLY":
-                if (t1 == TYPE.I && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.MULT);
-                    return TYPE.I;
-                } else if (t1 == TYPE.I && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FMULT);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FMULT);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.FMULT);
-                    return TYPE.R;
-                }
-            case "TK_DIVIDE":
-                if (t1 == TYPE.I && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.FDIV);
-                    return TYPE.R;
-                } else if (t1 == TYPE.I && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FDIV);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FDIV);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.FDIV);
-                    return TYPE.R;
-                }
-            case "TK_DIV":
-                if (t1 == TYPE.I && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.DIV);
-                    return TYPE.I;
-                }
-            case "TK_LESS_THAN":
-                return emitBool(OP_CODE.LSSIF, t1, t2);
-            case "TK_GREATER_THAN":
-                return emitBool(OP_CODE.GTRIF, t1, t2);
-            case "TK_LESS_THAN_EQUAL":
-                return emitBool(OP_CODE.LEQIF, t1, t2);
-            case "TK_GREATER_THAN_EQUAL":
-                return emitBool(OP_CODE.GEQIF, t1, t2);
-            case "TK_EQUAL":
-                return emitBool(OP_CODE.EQLIF, t1, t2);
-            case "TK_NOT_EQUAL":
-                return emitBool(OP_CODE.NEQLIF, t1, t2);
-        }
-        return null;
     }
 
     public static TYPE emit(String op, TYPE t1, TYPE t2){
