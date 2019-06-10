@@ -9,7 +9,7 @@ public final class Emulator {
         ArrayList<Token> tokenArrayList = TokenScanner.scan(new File("example.pas"));
         Parser.setTokenArrayListIterator(tokenArrayList);
         Byte[] instructions = Parser.parse();
-        //Simulator.setInstructions(instructions);
-        //Simulator.simulate();
+        Generator.setInstructions(instructions);
+        Generator.generate();
     }
 }

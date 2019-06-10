@@ -16,7 +16,7 @@ public class Generator {
     private static Byte[] dataArray = new Byte[1000];
     private static Byte[] instructions;
 
-    public static void simulate() {
+    public static void generate() {
         Parser.OP_CODE opCode;
         do {
             opCode = getOpCode();
@@ -839,7 +839,7 @@ public class Generator {
         System.out.println(AllProgram);
         try(FileWriter writer = new FileWriter("output.ll", false))
         {
-            //writer.write(AllProgram);  
+            writer.write(AllProgram);  
         }
         catch(IOException ex){
             System.out.println(ex.getMessage());
