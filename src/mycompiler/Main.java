@@ -9,6 +9,8 @@ public final class Main {
         ArrayList<Token> tokenArrayList = TokenScanner.scan(new File("example.pas"));
         Parser.setTokenArrayListIterator(tokenArrayList);
         Byte[] instructions = Parser.parse();
+        ArrayList<Symbol> vars = Parser.arraySymbols;
+        Generator.setVars(vars);
         Generator.setInstructions(instructions);
         Generator.generate();
     }

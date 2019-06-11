@@ -12,6 +12,7 @@ public final class Parser {
     }
 
     private static int dp = 0;
+    public static ArrayList<Symbol> arraySymbols = new ArrayList<Symbol>();
 
     private static final HashMap<String, TYPE> STRING_TYPE_HASH_MAP;
     static {
@@ -162,6 +163,7 @@ public final class Parser {
                 if (SymbolTable.lookup(var.getTokenValue(), symbol.getRegion()) == null) {
                     SymbolTable.insert(symbol);
                     forvar.add(symbol);
+                    arraySymbols.add(symbol);
                 }
                 if (variablesArrayList.size()!=kolvoVarFunc)
                 	genOpCode(OP_CODE.COMMA);
@@ -203,6 +205,7 @@ public final class Parser {
                 dp += 4;
                 if (SymbolTable.lookup(var.getTokenValue(), symbol.getRegion()) == null) {
                     SymbolTable.insert(symbol);
+                    arraySymbols.add(symbol);
                 }
             }
             match("TK_SEMI_COLON");
@@ -534,7 +537,7 @@ public final class Parser {
                 genAddress(lhsAddress);
             }
             else if (lhsType == TYPE.R && rhsType == TYPE.I) {
-            	//genOpCode(OP_CODE.CVR); ?????
+            	genOpCode(OP_CODE.CVR); //?????
                 genOpCode(OP_CODE.POP);
                 genAddress(lhsAddress);
             } 
@@ -797,7 +800,7 @@ public final class Parser {
     }
 
     public static void genOpCode(OP_CODE b){
-        System.out.println(String.format("OP_CODE: %s", b));
+        //System.out.println(String.format("OP_CODE: %s", b));
         byteArray[ip++] = (byte)(b.ordinal());
     }
 
