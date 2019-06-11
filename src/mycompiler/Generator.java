@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Stack;
 
+import javax.sound.sampled.LineEvent.Type;
+
 public class Generator {
 
     private static int ip = 0;
@@ -205,6 +207,28 @@ public class Generator {
                 	String tempest2 = stackNumber.pop();
                 	AllProgram+=";Label "+tempest2+" OR\n";
                 	stackNumber.push(tempest2);
+                	break;
+                case STARTGLOBALVARS:
+                	while (!vars.isEmpty()) {
+                		if (vars.get(0).getName().equals("Stop") && vars.get(0).getDataType().equals(Parser.TYPE.STOP)) {
+                			vars.remove(0);
+                			break;
+                		}
+                		AllProgram+="@\""+vars.get(0).getName()+"\" = internal global i32 undef\n";
+                		dataArrayTemp[vars.get(0).getAddress()] = "@\""+vars.get(0).getName()+"\"";
+                		vars.remove(0);
+                	}
+                	break;
+                case STARTFUNCVARS:
+                	while (!vars.isEmpty()) {
+                		if (vars.get(0).getName().equals("Stop") && vars.get(0).getDataType().equals(Parser.TYPE.STOP)) {
+                			vars.remove(0);
+                			break;
+                		}
+                		AllProgram+="@\""+vars.get(0).getName()+"\" = alloca i32\n";
+                		dataArrayTemp[vars.get(0).getAddress()] = "@\""+vars.get(0).getName()+"\"";
+                		vars.remove(0);
+                	}
                 	break;
                 default:
                     throw new Error(String.format("Unhandled case: %s", opCode));
@@ -418,6 +442,9 @@ public class Generator {
 	private static String vardecl = "";
 	private static void start() {
 		KolvoVar=0;
+		
+
+		
 		AllProgram+=""
 				+ "\ndefine i32 @main() {\n";
 	}
@@ -463,7 +490,7 @@ public class Generator {
     private static void funcendint() {
     	dp = getAddressValue();
     	String alloca = giveMeNumberVar();
-    	if (funcreturn) AllProgram+="%"+alloca+" = load i32, i32* %"+dataArrayTemp[dp]+"\n"
+    	if (funcreturn) AllProgram+="%"+alloca+" = load i32, i32* "+dataArrayTemp[dp]+"\n"
     			+ "ret i32 %"+alloca+"\n}\n\n";
     	else AllProgram+="ret i32 "+0+"\n}\n\n";
 	}
@@ -471,13 +498,21 @@ public class Generator {
     private static void funcendreal() {
     	dp = getAddressValue();
     	String alloca = giveMeNumberVar();
-    	if (funcreturn) AllProgram+="%"+alloca+" = load double, double* %"+dataArrayTemp[dp]+"\n"
+    	if (funcreturn) AllProgram+="%"+alloca+" = load double, double* "+dataArrayTemp[dp]+"\n"
     			+ "ret double %"+alloca+"\n}\n";
     	else AllProgram+="ret double "+0+"\n}\n";
 	}
     
     private static void funcstartint() {
-		AllProgram+="define i32 @"+giveNameFunction()+"("+vardecl;
+    	
+    	Symbol symbol = vars.get(0);
+    	
+		AllProgram+="define i32 @"+giveNameFunction()+"("+vardecl
+				+"@\""+symbol.getName()+"\" = alloca i32\n";
+		dataArrayTemp[symbol.getAddress()]="@\""+symbol.getName()+"\"";
+		vars.remove(0);
+		if (vars.get(0).getName().equals("Stop"))
+			vars.remove(0);
 	}
     
     private static void funcstartreal() {
@@ -659,7 +694,7 @@ public class Generator {
     	String alloca = giveMeNumberVar();
     	String intVar = (String) stackNumber.pop();
     	String alloca2 = giveMeNumberVar();
-        AllProgram+="%"+alloca+" = load i32, i32* %"+intVar+"\n"
+        AllProgram+="%"+alloca+" = load i32, i32* "+intVar+"\n"
         		+ "%"+alloca2+" = call i32 (i8*, ...) "
 				+ "@printf(i8* getelementptr inbounds ([4 x i8], "
 				+ "[4 x i8]* @.strint, i32 0, i32 0), i32 %"+alloca+")\n";
@@ -882,6 +917,9 @@ public class Generator {
     
     public static void pop(){
     	dp = getAddressValue();
+    	
+
+    	
         String alloca = (String) stackNumber.pop();
         String alloca1 = giveMeNumberVar();
         boolean integer=true;
@@ -893,7 +931,7 @@ public class Generator {
 
         if (integer) {
         	AllProgram+="%"+alloca1+" = load i32, i32* %"+alloca+"\n";
-        	AllProgram+="store i32 %"+alloca1+", i32* %"+dataArrayTemp[dp]+"\n";
+        	AllProgram+="store i32 %"+alloca1+", i32* "+dataArrayTemp[dp]+"\n";
         } else {
         	AllProgram+="%"+alloca1+" = load double, double* %"+alloca.replace("float", "")+"\n";
         	AllProgram+="store double %"+alloca1+", double* %"+dataArrayTemp[dp].replace("float", "")+"\n";
@@ -943,8 +981,8 @@ public class Generator {
         Generator.instructions = instructions;
     }
     
-    private static ArrayList<Symbol> vars = new ArrayList<Symbol>();
-    public static void setVars(ArrayList<Symbol> vars) {
+    private static Stack<Symbol> vars = new Stack<Symbol>();
+    public static void setVars(Stack<Symbol> vars) {
         Generator.vars = vars;
     }
 }

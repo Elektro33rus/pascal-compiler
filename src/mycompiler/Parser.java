@@ -8,11 +8,11 @@ import java.util.Stack;
 
 public final class Parser {
     enum TYPE {
-        I, R, B, LN, S, P, F
+        I, R, B, LN, S, P, F, STOP
     }
 
     private static int dp = 0;
-    public static ArrayList<Symbol> arraySymbols = new ArrayList<Symbol>();
+    public static Stack<Symbol> arraySymbols = new Stack<Symbol>();
 
     private static final HashMap<String, TYPE> STRING_TYPE_HASH_MAP;
     static {
@@ -24,7 +24,7 @@ public final class Parser {
     }
 
     enum OP_CODE {
-		STARTPROGRAM, FUNCTIONSTARTINT, FUNCTIONSTARTREAL, FUNCTIONENDINT, FUNCTIONENDREAL, STARTVARDECL, INTVAR, REALVAR, COMMA, ENDVARDECL, PUSHVARFROMDECL, HALT, BREAK, CONTINUE, PUSHREAL, PUSH, PUSHFLOATLIT, PUSHINTLIT, PUSHINT, FUNCTIONCALL, FORSTART, FORTO, FORBEGIN, FOREND, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, IFTHEN, IFELSE, IFEND, PRINT_INT, PRINT_REAL, PRINT_NEWLINE, FUNCRETURN, POP, AND, OR, PUSHVARFUNC, ISCALLINT, ISCALLREAL, REPLACERESULT, ADD, XCHG, CVR, FADD, SUB, FSUB, MULT, FMULT, FDIV, DIV, LSSIF, LSS, GTR, LEQ, GEQ, EQL, NEQL
+		STARTPROGRAM, FUNCTIONSTARTINT, FUNCTIONSTARTREAL, FUNCTIONENDINT, FUNCTIONENDREAL, STARTVARDECL, INTVAR, REALVAR, COMMA, ENDVARDECL, PUSHVARFROMDECL, HALT, BREAK, CONTINUE, PUSHREAL, PUSH, PUSHFLOATLIT, PUSHINTLIT, PUSHINT, FUNCTIONCALL, FORSTART, FORTO, FORBEGIN, FOREND, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, IFTHEN, IFELSE, IFEND, PRINT_INT, PRINT_REAL, PRINT_NEWLINE, FUNCRETURN, POP, AND, OR, PUSHVARFUNC, ISCALLINT, ISCALLREAL, REPLACERESULT, ADD, XCHG, CVR, FADD, SUB, FSUB, MULT, FMULT, FDIV, DIV, LSSIF, LSS, GTR, LEQ, GEQ, EQL, NEQL, STARTGLOBALVARS, STARTFUNCVARS
     }
 
     private static final int ADDRESS_SIZE = 4;
@@ -99,8 +99,11 @@ public final class Parser {
                     STRING_TYPE_HASH_MAP.get(TK_RESULT.toLowerCase().substring(3)),
                     dp);
             dp += 4;
-            if (SymbolTable.lookup(functionResult, symbolFunctionResult.getRegion()) == null)
+            if (SymbolTable.lookup(functionResult, symbolFunctionResult.getRegion()) == null) {
                 SymbolTable.insert(symbolFunctionResult);
+                arraySymbols.add(symbolFunctionResult);
+                arraySymbols.add(new Symbol("Stop", null, null, TYPE.STOP, 0));
+            }
             match("TK_SEMI_COLON");
             Symbol symbolFunction = new Symbol(function,
                     "TK_A_FUNC", "Global",
@@ -163,7 +166,6 @@ public final class Parser {
                 if (SymbolTable.lookup(var.getTokenValue(), symbol.getRegion()) == null) {
                     SymbolTable.insert(symbol);
                     forvar.add(symbol);
-                    arraySymbols.add(symbol);
                 }
                 if (variablesArrayList.size()!=kolvoVarFunc)
                 	genOpCode(OP_CODE.COMMA);
@@ -210,6 +212,12 @@ public final class Parser {
             }
             match("TK_SEMI_COLON");
         }
+    	arraySymbols.add(new Symbol("Stop", null, null, TYPE.STOP, 0));
+    	if (Region.equals("Global"))
+    		genOpCode(OP_CODE.STARTGLOBALVARS);
+    	else 
+    		genOpCode(OP_CODE.STARTFUNCVARS);
+    	 
     }
 
     public static void begin(){
@@ -537,7 +545,7 @@ public final class Parser {
                 genAddress(lhsAddress);
             }
             else if (lhsType == TYPE.R && rhsType == TYPE.I) {
-            	genOpCode(OP_CODE.CVR); //?????
+            	genOpCode(OP_CODE.CVR);
                 genOpCode(OP_CODE.POP);
                 genAddress(lhsAddress);
             } 
