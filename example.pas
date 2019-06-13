@@ -1,25 +1,11 @@
 program example;
 var x: integer;{global}
 
-function maer(): integer;
-var z: integer;
 begin
-	
-	if (3 < 4) then
-	begin
-		z:=333;
-	end;
-	else
-	begin
-		z:=124;
-	end;
-	
-	writeln(z);
+
+while (9 < 8 and (7 < 6 or 5 < 4)) do
+begin
+	writeln(50);
 end;
-
-
-begin
-
-maer();
 
 end.

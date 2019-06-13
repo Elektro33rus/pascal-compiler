@@ -24,7 +24,13 @@ public final class Parser {
     }
 
     enum OP_CODE {
-		STARTPROGRAM, FUNCTIONSTARTINT, FUNCTIONSTARTREAL, FUNCTIONENDINT, FUNCTIONENDREAL, STARTVARDECL, INTVAR, REALVAR, COMMA, ENDVARDECL, PUSHVARFROMDECL, HALT, BREAK, CONTINUE, PUSHREAL, PUSH, PUSHFLOATLIT, PUSHINTLIT, PUSHINT, FUNCTIONCALL, FORSTART, FORTO, FORBEGIN, FOREND, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, IFTHEN, IFELSE, IFEND, PRINT_INT, PRINT_REAL, PRINT_NEWLINE, FUNCRETURN, POP, AND, OR, PUSHVARFUNC, ISCALLINT, ISCALLREAL, REPLACERESULT, ADD, XCHG, CVR, FADD, SUB, FSUB, MULT, FMULT, FDIV, DIV, LSSIF, LSS, GTR, LEQ, GEQ, EQL, NEQL, STARTGLOBALVARS, STARTFUNCVARS
+		STARTPROGRAM, FUNCTIONSTARTINT, FUNCTIONSTARTREAL, FUNCTIONENDINT, FUNCTIONENDREAL, 
+		STARTVARDECL, INTVAR, REALVAR, COMMA, ENDVARDECL, PUSHVARFROMDECL, HALT, BREAK, 
+		CONTINUE, PUSHREAL, PUSH, PUSHFLOATLIT, PUSHINTLIT, PUSHINT, FUNCTIONCALL, 
+		FORSTART, FORTO, FORBEGIN, FOREND, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, 
+		IFTHEN, IFELSE, IFEND, PRINT_INT, PRINT_REAL, PRINT_NEWLINE, FUNCRETURN, POP, 
+		AND, OR, PUSHVARFUNC, ISCALLINT, ISCALLREAL, REPLACERESULT, ADD, XCHG, CVR, 
+		FADD, SUB, FSUB, MULT, FMULT, FDIV, DIV, LSSIF, LSS, GTR, LEQ, GEQ, EQL, NEQL, STARTGLOBALVARS, STARTFUNCVARS
     }
 
     private static final int ADDRESS_SIZE = 4;
@@ -554,8 +560,8 @@ public final class Parser {
         }
     }
     
-    public static ArrayList<TYPE> C(){
-    	ArrayList<TYPE> type = new ArrayList<TYPE>();
+    public static TYPE C(){
+    	TYPE type=null;
         do {
         TYPE e1 = E();
         while (currentToken.getTokenType().equals("TK_LESS_THAN") ||
@@ -568,7 +574,7 @@ public final class Parser {
             match(pred);
             TYPE e2 = T();
             e1 = emit(pred, e1, e2);
-            type.add(e1);
+            type = e1;
         }
         if (currentToken.getTokenType().equals("TK_AND")) {
         	genOpCode(OP_CODE.AND);
@@ -687,7 +693,7 @@ public final class Parser {
                 return F();
             case "TK_OPEN_PARENTHESIS":
                 match("TK_OPEN_PARENTHESIS");
-                TYPE t = E();
+                TYPE t = C();
                 match("TK_CLOSE_PARENTHESIS");
                 return t;
             default:
