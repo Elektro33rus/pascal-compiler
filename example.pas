@@ -1,18 +1,11 @@
-program zadaca;
-var y, n, x : integer;
+program example;
+var x: integer;{global}
 
 begin
 
-y:=0;
-
-while (y < 10) do
+while (9 < 8 and (7 < 6 or 5 < 4)) do
 begin
-	y:=y+1;
-	if (y = 5) then
-	begin
-		continue;
-	end;
-	writeln(y);
+	writeln(50);
 end;
 
 end.

@@ -6,14 +6,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Stack;
 
-import com.sun.prism.PixelFormat.DataType;
-
 public final class Parser {
     enum TYPE {
-        I, R, B, LN, S, P, F     // integer, real, boolean, string, procedure, function
+        I, R, B, LN, S, P, F, STOP
     }
 
-    private static int dp = 0; // data pointer for vars
+    private static int dp = 0;
+    public static Stack<Symbol> arraySymbols = new Stack<Symbol>();
 
     private static final HashMap<String, TYPE> STRING_TYPE_HASH_MAP;
     static {
@@ -25,78 +24,14 @@ public final class Parser {
     }
 
     enum OP_CODE {
-    PUSHINTLIT, //0
-    PUSH, //1
-    POP, //2
-    PUSHFLOATLIT, //3 
-    JMP, //4
-    JFALSE, //5
-    JTRUE, //6
-    CVR, //7
-    CVI, //8
-    DUP, //9
-    XCHG, //10
-    REMOVE, //11
-    ADD, //12
-    SUB, //13
-    MULT, //14
-    DIV, //15
-    NEG, //16
-    OR, //17
-    AND, //18
-    FADD,  //19
-    FSUB, //20
-    FMULT, //21 
-    FDIV, //22
-    FNEG, //23
-    EQL,  //24
-    NEQL,  //25
-    GEQ,  //26
-    LEQ, //27
-    GTR, //28
-    LSS, //29
-    FGTR, //30
-    FLSS, //31
-    HALT, //32
-    PRINT_INT, //33
-    PRINT_CHAR, //34
-    PRINT_BOOL, //35
-    PRINT_REAL, //36
-    PRINT_NEWLINE, //37
-    GET, //38
-    PUT, //39
-    JMPTOFUNCTION, //40
-    IFTHEN, //41
-    IFELSE, //42
-    IFEND, //43
-    JMPOUTFUNCTION, //44 
-    FOREND, // 45
-    LEQFOR, // 46
-    EQLIF,  // 47
-    NEQLIF,  // 48
-    GEQIF,  //49
-    LEQIF, //50
-    GTRIF, //51
-    LSSIF, //52
-    FGTRIF, //53
-    FLSSIF //54
-, PUSHREAL //55
-, FUNCTIONSTART, FUNCTIONCALL,
-FUNCTIONEND, STARTPROGRAM, 
-INTVAR, REALVAR, ENDVARDECL,
-PUSHVARFUNC, CALLNUMBER, PUSHINT, COMMA, PUSHDATA,
-PUSHVARFROMDECL, FUNCTIONENDVOID, 
-FUNCTIONENDINT, FUNCTIONENDREAL,
-FUNCTIONSTARTINT, FUNCTIONSTARTREAL, 
-STARTVARDECL, 
-POPRESULT,
-PUSHRESULT,
-REPLACERESULT, ISCALLINT,
-ISCALLREAL, CALLINT, 
-FUNCVOID,
-FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BREAK, CONTINUE
+		STARTPROGRAM, FUNCTIONSTARTINT, FUNCTIONSTARTREAL, FUNCTIONENDINT, FUNCTIONENDREAL, 
+		STARTVARDECL, INTVAR, REALVAR, COMMA, ENDVARDECL, PUSHVARFROMDECL, HALT, BREAK, 
+		CONTINUE, PUSHREAL, PUSH, PUSHFLOATLIT, PUSHINTLIT, PUSHINT, FUNCTIONCALL, 
+		FORSTART, FORTO, FORBEGIN, FOREND, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, 
+		IFTHEN, IFELSE, IFEND, PRINT_INT, PRINT_REAL, PRINT_NEWLINE, FUNCRETURN, POP, 
+		AND, OR, PUSHVARFUNC, ISCALLINT, ISCALLREAL, REPLACERESULT, ADD, XCHG, CVR, 
+		FADD, SUB, FSUB, MULT, FMULT, FDIV, DIV, LSSIF, LSS, GTR, LEQ, GEQ, EQL, NEQL, STARTGLOBALVARS, STARTFUNCVARS
     }
-    
 
     private static final int ADDRESS_SIZE = 4;
 
@@ -107,14 +42,13 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
     private static Byte[] byteArray = new Byte[INSTRUCTION_SIZE];
     private static int ip = 0;
     public static Byte[] parse() {
-        getToken(); // Get initial token
+        getToken();
         match("TK_PROGRAM");
         match("TK_IDENTIFIER");
         match("TK_SEMI_COLON");
         program();
         return byteArray;
     }
-
 
     public static void program() {
     	Region = "Global";
@@ -157,17 +91,13 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
             match("TK_CLOSE_PARENTHESIS");
             match("TK_COLON");
             String TK_RESULT = currentToken.getTokenType();
-            if (TK_RESULT.equals("TK_INTEGER")) {
+            if (TK_RESULT.equals("TK_INTEGER"))
             	genOpCode(OP_CODE.FUNCTIONSTARTINT);
-            }
-            else {
-            	if (TK_RESULT.equals("TK_REAL")) {
+            else
+            	if (TK_RESULT.equals("TK_REAL"))
                 	genOpCode(OP_CODE.FUNCTIONSTARTREAL);
-            	}
-            	else {
-            		throw new Error("Функция '"+function+"' возвращает неизвестный результат (может быть int or real)");
-            	}
-            }
+            	else
+            		throw new Error("Функция '"+function+"' возвращает неизвестный результат (может быть int или real)");
             getToken();
             Region = function;
             Symbol symbolFunctionResult = new Symbol(functionResult,
@@ -177,7 +107,9 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
             dp += 4;
             if (SymbolTable.lookup(functionResult, symbolFunctionResult.getRegion()) == null) {
                 SymbolTable.insert(symbolFunctionResult);
-            } 
+                arraySymbols.add(symbolFunctionResult);
+                arraySymbols.add(new Symbol("Stop", null, null, TYPE.STOP, 0));
+            }
             match("TK_SEMI_COLON");
             Symbol symbolFunction = new Symbol(function,
                     "TK_A_FUNC", "Global",
@@ -187,12 +119,10 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
             symbolFunction.setAmount(kolvoparametrov);
             Region = function;
             declarations();
-            if (SymbolTable.lookup(function, "Global") == null) {
+            if (SymbolTable.lookup(function, "Global") == null)
                 SymbolTable.insert(symbolFunction);
-            }
-            else {
+            else
             	throw new Error(String.format("Функция '"+function + "' уже объявлена!"));
-            }
             match("TK_BEGIN");
             Region = function;
             statements();
@@ -202,11 +132,9 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
             	genOpCode(OP_CODE.FUNCTIONENDINT);
             	genAddress(symbolFunctionResult.getAddress());
             }
-            else {
-            	if (TK_RESULT.equals("TK_REAL")) {
+            else
+            	if (TK_RESULT.equals("TK_REAL"))
                 	genOpCode(OP_CODE.FUNCTIONENDREAL);
-            	}
-            }
         }
     }
 
@@ -220,21 +148,19 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                 currentToken.setTokenType("TK_A_FUNC_VAR");
                 variablesArrayList.add(currentToken);
                 match("TK_A_FUNC_VAR");
-                if ("TK_COMMA".equals(currentToken.getTokenType())) {
+                if ("TK_COMMA".equals(currentToken.getTokenType()))
                     match("TK_COMMA");
-                }
             }
             if (variablesArrayList.size()==0)
             	break;
             match("TK_COLON");
             String dataType = currentToken.getTokenType();
             match(dataType);
-            int temp=0;
+            int kolvoVarFunc=0;
             for (Token var : variablesArrayList) {
-            	temp++;
-            	if (dataType.equals("TK_INTEGER")) {
+            	kolvoVarFunc++;
+            	if (dataType.equals("TK_INTEGER"))
             		genOpCode(OP_CODE.INTVAR);
-            	}
             	else
                 	if (dataType.equals("TK_REAL"))
                 		genOpCode(OP_CODE.REALVAR);
@@ -247,13 +173,11 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                     SymbolTable.insert(symbol);
                     forvar.add(symbol);
                 }
-                if (variablesArrayList.size()!=temp) {
+                if (variablesArrayList.size()!=kolvoVarFunc)
                 	genOpCode(OP_CODE.COMMA);
-                }
             }
-            if (!currentToken.getTokenValue().equals("TK_CLOSE_PARENTHESIS")) {
+            if (!currentToken.getTokenValue().equals("TK_CLOSE_PARENTHESIS"))
             	break;
-            }
         }
         genOpCode(OP_CODE.ENDVARDECL);
     	for (int i=0; i<forvar.size();i++) {
@@ -266,19 +190,17 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
     
     public static void varDeclarations() {
         while(true) {
-            if ("TK_VAR".equals(currentToken.getTokenType())) {
+            if ("TK_VAR".equals(currentToken.getTokenType()))
                 match("TK_VAR");
-            } else {
+            else
                 break;
-            }
             ArrayList<Token> variablesArrayList = new ArrayList<>();
             while ("TK_IDENTIFIER".equals(currentToken.getTokenType())) {
                 currentToken.setTokenType("TK_A_VAR");
                 variablesArrayList.add(currentToken);
                 match("TK_A_VAR");
-                if ("TK_COMMA".equals(currentToken.getTokenType())) {
+                if ("TK_COMMA".equals(currentToken.getTokenType()))
                     match("TK_COMMA");
-                }
             }
             match("TK_COLON");
             String dataType = currentToken.getTokenType();
@@ -291,10 +213,17 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                 dp += 4;
                 if (SymbolTable.lookup(var.getTokenValue(), symbol.getRegion()) == null) {
                     SymbolTable.insert(symbol);
+                    arraySymbols.add(symbol);
                 }
             }
             match("TK_SEMI_COLON");
         }
+    	arraySymbols.add(new Symbol("Stop", null, null, TYPE.STOP, 0));
+    	if (Region.equals("Global"))
+    		genOpCode(OP_CODE.STARTGLOBALVARS);
+    	else 
+    		genOpCode(OP_CODE.STARTFUNCVARS);
+    	 
     }
 
     public static void begin(){
@@ -329,10 +258,8 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                 	break;
                 case "TK_IDENTIFIER":
                 	Symbol symbol = findSymbol();
-                    if (symbol != null && (symbol.getRegion().equals(Region) || symbol.getRegion().equals("Global") 
-                    		|| symbol.getRegion().equals("FUNCVAR"+Region))) {
+                    if (symbol != null && (symbol.getRegion().equals(Region) || symbol.getRegion().equals("Global") || symbol.getRegion().equals("FUNCVAR"+Region)))
                         currentToken.setTokenType(symbol.getTokenType());
-                    }
                     else {
                     	if (currentToken.getTokenValue().equals("break")) {
                     		genOpCode(OP_CODE.BREAK);
@@ -344,7 +271,7 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                     			match("TK_IDENTIFIER");
                     		}
                     		else
-                    			throw new Error(String.format("TK_IDENTIFIER '"+currentToken.getTokenValue()+"' is undefined"));
+                    			throw new Error(String.format("TK_IDENTIFIER '"+currentToken.getTokenValue()+"' не объявлен"));
                     }
                     break;
                 case "TK_A_FUNC_VAR":
@@ -389,14 +316,12 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
 	                	genAddress(parametr.getAddress());
 	                }
 	                match("TK_A_VAR");
-		            if (currentToken.getTokenType().equals("TK_COMMA")) {
+		            if (currentToken.getTokenType().equals("TK_COMMA"))
 		            	match(currentToken.getTokenType());
-		            }
 	        } else {
 	            t = getLitType(currentToken.getTokenType());
-	            if (t == null) {
+	            if (t == null)
 	            	throw new Error("'"+currentToken.getTokenValue()+"' is not defined");
-	            }
 	            assert t != null;
 	            switch (t) {
 	                case R:
@@ -409,11 +334,10 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
 	                    break;
 	                case B:
 	                    genOpCode(OP_CODE.PUSHINTLIT);
-	                    if (currentToken.getTokenValue().equals("true")) {
+	                    if (currentToken.getTokenValue().equals("true"))
 	                        genAddress(1);
-	                    } else {
+	                    else
 	                        genAddress(0);
-	                    }
 	                    break;
 	                case LN:
 	                	break;
@@ -421,24 +345,21 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
 	                    throw new Error("Cannot write unknown type");
 	            }
 	            match(currentToken.getTokenType());
-	            if (currentToken.getTokenType().equals("TK_COMMA")) {
+	            if (currentToken.getTokenType().equals("TK_COMMA"))
 	            	match(currentToken.getTokenType());
-	            }
 	        }
         }
         match("TK_CLOSE_PARENTHESIS");
-        if (kolvo<symbol.getAmount()) {
+        if (kolvo<symbol.getAmount())
         	throw new Error("Недостаточно аргументов для вызова функции '"+symbol.getName()
         			+"' (пришло "+kolvo+" нужно "+symbol.getAmount()+")");
-        }
-        if (kolvo>symbol.getAmount()) {
+        if (kolvo>symbol.getAmount())
         	throw new Error("Слишком много аргументов для вызова функции '"+symbol.getName()
         			+"' (пришло "+kolvo+" нужно "+symbol.getAmount()+")");
-        }
     	genOpCode(OP_CODE.PUSHINT);
-    	genAddress(callnumber); //какую функцию вызвать
+    	genAddress(callnumber);
     	genOpCode(OP_CODE.PUSHINT);
-    	genAddress(kolvo); //количество переменных в вызове функции example: func(5, 4, 3, 2, 1);
+    	genAddress(kolvo);
         genOpCode(OP_CODE.FUNCTIONCALL);
 	}
 
@@ -516,23 +437,19 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
     
     private static Symbol findSymbol() {
     	Symbol symbol = SymbolTable.lookup(currentToken.getTokenValue(), "FUNCVAR"+Region);
-    	if (symbol == null) {
+    	if (symbol == null)
     		symbol = SymbolTable.lookup(currentToken.getTokenValue(), Region);
-    	}
-        if (symbol == null) {
+        if (symbol == null)
         	symbol =  SymbolTable.lookup(currentToken.getTokenValue(), "Global");
-        }
         return symbol;
     }
     
     private static Symbol findSymbol(Token token) {
     	Symbol symbol = SymbolTable.lookup(token.getTokenValue(), "FUNCVAR"+Region);
-    	if (symbol == null) {
+    	if (symbol == null)
     		symbol = SymbolTable.lookup(token.getTokenValue(), Region);
-    	}
-        if (symbol == null) {
+        if (symbol == null)
         	symbol =  SymbolTable.lookup(token.getTokenValue(), "Global");
-        }
         return symbol;
     }
 
@@ -553,13 +470,11 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                     	genOpCode(OP_CODE.PUSH);
                     	genAddress(symbol.getAddress());
                     }
-                                
                     match("TK_A_VAR");
             } else {
                 t = getLitType(currentToken.getTokenType());
-                if (t == null) {
+                if (t == null)
                 	throw new Error("'"+currentToken.getTokenValue()+"' is not defined");
-                }
                 assert t != null;
                 switch (t) {
                     case R:
@@ -572,11 +487,10 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                         break;
                     case B:
                         genOpCode(OP_CODE.PUSHINTLIT);
-                        if (currentToken.getTokenValue().equals("true")) {
+                        if (currentToken.getTokenValue().equals("true"))
                             genAddress(1);
-                        } else {
+                        else
                             genAddress(0);
-                        }
                         break;
                     case LN:
                     	break;
@@ -592,9 +506,6 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                     break;
                 case R:
                     genOpCode(OP_CODE.PRINT_REAL);
-                    break;
-                case B:
-                    genOpCode(OP_CODE.PRINT_BOOL);
                     break;
                 case LN:
                 	genOpCode(OP_CODE.PRINT_NEWLINE);
@@ -635,13 +546,12 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
             			match("TK_A_FUNC_VAR");
             match("TK_ASSIGNMENT");
             TYPE rhsType = E();
-
             if (lhsType == rhsType) {
                 genOpCode(OP_CODE.POP);
                 genAddress(lhsAddress);
-            } 
+            }
             else if (lhsType == TYPE.R && rhsType == TYPE.I) {
-            	//genOpCode(OP_CODE.CVR);
+            	genOpCode(OP_CODE.CVR);
                 genOpCode(OP_CODE.POP);
                 genAddress(lhsAddress);
             } 
@@ -650,8 +560,8 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
         }
     }
     
-    public static ArrayList<TYPE> C(){
-    	ArrayList<TYPE> type = new ArrayList<TYPE>();
+    public static TYPE C(){
+    	TYPE type=null;
         do {
         TYPE e1 = E();
         while (currentToken.getTokenType().equals("TK_LESS_THAN") ||
@@ -664,7 +574,7 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
             match(pred);
             TYPE e2 = T();
             e1 = emit(pred, e1, e2);
-            type.add(e1);
+            type = e1;
         }
         if (currentToken.getTokenType().equals("TK_AND")) {
         	genOpCode(OP_CODE.AND);
@@ -675,10 +585,10 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
         	getToken();
         	continue;
         }
-        else {
+        else
         	break;
         }
-        } while (true);
+        while (true);
         return type;
     }
 
@@ -731,7 +641,6 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                         currentToken.setTokenType("TK_A_VAR");
                         genOpCode(OP_CODE.PUSH);
                         genAddress(symbol.getAddress());
-
                         match("TK_A_VAR");
                         return symbol.getDataType();
                     }
@@ -751,14 +660,12 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                     		genOpCode(OP_CODE.PUSH);
                     	else if (varFunctionResult.getDataType().equals(TYPE.R))
                     		genOpCode(OP_CODE.PUSHREAL);
-                    	
                     	genAddress(varFunctionResult.getAddress());
                         return varFunctionResult.getDataType();
                     }
                 }
-                else {
+                else
                     throw new Error(String.format("Неизвестная переменная '%s'", currentToken.getTokenValue()));
-                }
             case "TK_INTLIT":
                 genOpCode(OP_CODE.PUSHINTLIT);
                 genAddress(Integer.valueOf(currentToken.getTokenValue()));
@@ -786,107 +693,12 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
                 return F();
             case "TK_OPEN_PARENTHESIS":
                 match("TK_OPEN_PARENTHESIS");
-                TYPE t = E();
+                TYPE t = C();
                 match("TK_CLOSE_PARENTHESIS");
                 return t;
             default:
                 throw new Error("Unknown data type");
         }
-    }
-    
-    public static TYPE emitIf(String op, TYPE t1, TYPE t2){
-        switch (op) {
-            case "TK_PLUS":
-                if (t1 == TYPE.I && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.ADD);
-                    return TYPE.I;
-                } else if (t1 == TYPE.I && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FADD);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FADD);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.FADD);
-                    return TYPE.R;
-                }
-            case "TK_MINUS":
-                if (t1 == TYPE.I && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.SUB);
-                    return TYPE.I;
-                } else if (t1 == TYPE.I && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FSUB);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FSUB);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.FSUB);
-                    return TYPE.R;
-                }
-            case "TK_MULTIPLY":
-                if (t1 == TYPE.I && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.MULT);
-                    return TYPE.I;
-                } else if (t1 == TYPE.I && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FMULT);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FMULT);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.FMULT);
-                    return TYPE.R;
-                }
-            case "TK_DIVIDE":
-                if (t1 == TYPE.I && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.FDIV);
-                    return TYPE.R;
-                } else if (t1 == TYPE.I && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.XCHG);
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FDIV);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.CVR);
-                    genOpCode(OP_CODE.FDIV);
-                    return TYPE.R;
-                } else if (t1 == TYPE.R && t2 == TYPE.R) {
-                    genOpCode(OP_CODE.FDIV);
-                    return TYPE.R;
-                }
-            case "TK_DIV":
-                if (t1 == TYPE.I && t2 == TYPE.I) {
-                    genOpCode(OP_CODE.DIV);
-                    return TYPE.I;
-                }
-            case "TK_LESS_THAN":
-                return emitBool(OP_CODE.LSSIF, t1, t2);
-            case "TK_GREATER_THAN":
-                return emitBool(OP_CODE.GTRIF, t1, t2);
-            case "TK_LESS_THAN_EQUAL":
-                return emitBool(OP_CODE.LEQIF, t1, t2);
-            case "TK_GREATER_THAN_EQUAL":
-                return emitBool(OP_CODE.GEQIF, t1, t2);
-            case "TK_EQUAL":
-                return emitBool(OP_CODE.EQLIF, t1, t2);
-            case "TK_NOT_EQUAL":
-                return emitBool(OP_CODE.NEQLIF, t1, t2);
-        }
-        return null;
     }
 
     public static TYPE emit(String op, TYPE t1, TYPE t2){
@@ -1002,38 +814,32 @@ FUNCRETURN, FORBEGIN, FORTO, FORSTART, WHILECMP, WHILEBEGIN, WHILEEND, IFCMP, BR
     }
 
     public static void genOpCode(OP_CODE b){
-        System.out.println(String.format("OP_CODE: %s", b));
+        //System.out.println(String.format("OP_CODE: %s", b));
         byteArray[ip++] = (byte)(b.ordinal());
     }
 
     public static void genAddress(int a){
-//        System.out.println(String.format("ADDRESS_VALUE: %s", a));
         byte[] intBytes = ByteBuffer.allocate(ADDRESS_SIZE).putInt(a).array();
-        for (byte b: intBytes) {
+        for (byte b: intBytes)
             byteArray[ip++] = b;
-        }
     }
 
     public static void genAddress(float a){
-//        System.out.println(String.format("ADDRESS_VALUE: %s", a));
         byte[] intBytes = ByteBuffer.allocate(ADDRESS_SIZE).putFloat(a).array();
-        for (byte b: intBytes) {
+        for (byte b: intBytes)
             byteArray[ip++] = b;
-        }
     }
 
     public static void getToken() {
-        if (it.hasNext()) {
+        if (it.hasNext())
             currentToken =  it.next();
-        }
     }
 
     public static void match(String tokenType) {
-        if (!tokenType.equals(currentToken.getTokenType())) {
+        if (!tokenType.equals(currentToken.getTokenType()))
             throw new Error(String.format("Token type (%s) does not match current token type (%s)", tokenType, currentToken.getTokenType()));
-        } else {
+        else
             getToken();
-        }
     }
 
     public static TYPE getLitType(String tokenType) {
