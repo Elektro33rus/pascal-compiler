@@ -198,12 +198,14 @@ public class Generator {
                 case AND:
                 	String tempest = stackNumber.pop();
                 	
+                	AndOr.push("AND");
                 	AllProgram+=";Label "+tempest+" AND\n";
                 	stackNumber.push(tempest);
                 	break;
                 case OR:
                 	String tempest2 = stackNumber.pop();
                 	
+                	AndOr.push("OR");
                 	AllProgram+=";Label "+tempest2+" OR\n";
                 	stackNumber.push(tempest2);
                 	break;
@@ -235,6 +237,8 @@ public class Generator {
         }
         while (opCode != Parser.OP_CODE.HALT);
     }
+    
+    private static Stack<String> AndOr = new Stack<String>();
     
     private static void whilecmp() {
     	IsIf=false;
@@ -318,6 +322,20 @@ public class Generator {
     	String label7 = giveMeNumberVar();
     	String label8 = stackNumber.pop();
     	
+    	while (!AndOr.isEmpty()) {
+	    	String te1 = AndOr.pop();
+	    	if (te1.equals("AND")) {
+	    		String temp = whileStackLabels.pop();
+	    		AllProgram= AllProgram.replace(temp, label8);
+	    	} else 
+	    		if (te1.equals("OR")) {
+	        		String temp = whileStackLabels.pop();
+	        		AllProgram= AllProgram.replace(temp, label8);
+	    		} else {
+	    			throw new Error("Œ¯Ë·Í‡ Ò or and");
+	    		}
+    	}
+    	
     	AllProgram+="br label "+label8+"\n";
     	if (!continueStackLabels.isEmpty()) {
     		String replaceLabel = continueStackLabels.pop();
@@ -341,6 +359,22 @@ public class Generator {
     private static String getContinue() {
     	String get = "%"+"$CONTINUE"+continueInt+"CONTINUE$";
     	continueInt++;
+    	return get;
+    }
+    
+    private static Stack<String> andStackLabels = new Stack<String>();
+    private static int andInt = 0;
+    private static String getAnd() {
+    	String get = "%"+"$AND"+andInt+"AND$";
+    	andInt++;
+    	return get;
+    }
+    
+    private static Stack<String> orStackLabels = new Stack<String>();
+    private static int orInt = 0;
+    private static String getOr() {
+    	String get = "%"+"$OR"+andInt+"OR$";
+    	orInt++;
     	return get;
     }
     
@@ -371,7 +405,7 @@ public class Generator {
     	}
     	else
     		dataArrayIf.push(dataArrayTemp.clone());
-    	String temp = (String) stackNumber.pop();
+    	String temp = stackNumber.pop();
     	AllProgram+=";Label "+temp+" ifthen\n";
     }
     
@@ -398,7 +432,7 @@ public class Generator {
     }
     
     private static void ifend() {
-    	String labelexit = (String) giveMeNumberVar();
+    	String labelexit = giveMeNumberVar();
     	String criptoExitStart=ifStackLabels.pop();
     	if (ifStackLabels.isEmpty()) {
     		AllProgram=AllProgram.replace(criptoExitStart, labelexit);
@@ -431,14 +465,13 @@ public class Generator {
 
     	AllProgram+="\n;Label "+labelexit+" ifend\n";
     	dataArrayTemp = dataArrayIf.pop();
-    	//dataArrayIf.push(dataArrayTemp.clone());
     }
     
     private static boolean IsNotBreak = true;
     private static boolean IsNotContinue = true;
     
     private static void replaceresult() {
-		String alloca = (String) stackNumber.pop();
+		String alloca = stackNumber.pop();
 		dp = getAddressValue();
 		dataArrayTemp[dp]=alloca;
 	}
@@ -459,8 +492,8 @@ public class Generator {
     
     private static boolean callint = true;
 	private static void funccall() {
-		String kolvoparametrov = (String) stackNumber.pop();
-		String numberFunc = (String) stackNumber.pop();
+		String kolvoparametrov = stackNumber.pop();
+		String numberFunc = stackNumber.pop();
 		String type;
 		if (callint) type="i32";
 		else type="double";
@@ -521,8 +554,8 @@ public class Generator {
 	}
 
     private static void eql(boolean IsIf) {
-        String var2 = (String) stackNumber.pop();
-        String var1 = (String) stackNumber.pop();
+        String var2 = stackNumber.pop();
+        String var1 = stackNumber.pop();
         String alloca = giveMeNumberVar();
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
@@ -544,8 +577,8 @@ public class Generator {
     }
 
     private static void neql(boolean IsIf) {
-        String var2 = (String) stackNumber.pop();
-        String var1 = (String) stackNumber.pop();
+        String var2 = stackNumber.pop();
+        String var1 = stackNumber.pop();
         String alloca = giveMeNumberVar();
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
@@ -575,8 +608,8 @@ public class Generator {
     }
 
     private static void less(boolean IsIf) {
-        String var2 = (String) stackNumber.pop();
-        String var1 = (String) stackNumber.pop();
+        String var2 = stackNumber.pop();
+        String var1 = stackNumber.pop();
         String alloca = giveMeNumberVar();
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
@@ -630,8 +663,8 @@ public class Generator {
     }
 
     private static void lessEql(boolean IsIf) {
-        String var2 = (String) stackNumber.pop();
-        String var1 = (String) stackNumber.pop();
+        String var2 = stackNumber.pop();
+        String var1 = stackNumber.pop();
         String alloca = giveMeNumberVar();
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
@@ -653,8 +686,8 @@ public class Generator {
     }
 
     private static void greaterEql(boolean IsIf) {
-        String var2 = (String) stackNumber.pop();
-        String var1 = (String) stackNumber.pop();
+        String var2 = stackNumber.pop();
+        String var1 = stackNumber.pop();
         String alloca = giveMeNumberVar();
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
@@ -719,8 +752,8 @@ public class Generator {
     }
 
     private static void fadd() {
-        String var1 = (String) stackNumber.pop();
-        String var2 = (String) stackNumber.pop();
+        String var1 = stackNumber.pop();
+        String var2 = stackNumber.pop();
         String alloca = giveMeNumberVar();
         String alloca2 = giveMeNumberVar();
         String alloca3 = giveMeNumberVar();
