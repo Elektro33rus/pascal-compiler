@@ -149,7 +149,8 @@ public class Generator {
                 	break;
                 case INTVAR:
                 	vardecl+="i32";
-                	stackNumber.push(String.valueOf(KolvoVar));
+                	String varsDecl="%"+String.valueOf(KolvoVar);
+                	stackNumber.push(varsDecl);
                 	KolvoVar++;
                 	break;
                 case COMMA:
@@ -974,7 +975,7 @@ public class Generator {
         System.out.println(AllProgram);
         try(FileWriter writer = new FileWriter("output.ll", false))
         {
-            writer.write(AllProgram);  
+            //writer.write(AllProgram);  
         }
         catch(IOException ex){
             System.out.println(ex.getMessage());

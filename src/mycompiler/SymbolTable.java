@@ -46,8 +46,7 @@ public final class SymbolTable {
         for (int i = 0; i < symbolName.length(); i++)
             h = h + h  + symbolName.charAt(i);
         h*=197;
-        h = h % HASH_TABLE_SIZE/2;
-        return h;
+        return h = h % HASH_TABLE_SIZE/2;
     }
 
     public static void openScope() {
