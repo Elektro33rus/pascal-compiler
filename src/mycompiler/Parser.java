@@ -521,7 +521,9 @@ public final class Parser {
                     case LN:
                     	break;
                     default:
-                        throw new Error("Cannot write unknown type");
+            			String Row =  String.valueOf(currentToken.getLineRow()+1);
+            			String Col = String.valueOf(currentToken.getLineCol()+1);
+            			throw new Error(String.format("Не могу вывести неизвестный тип данных" + "("+Row+ " строка, "+Col+" столбец)"));
                 }
                 match(currentToken.getTokenType());
             }
@@ -537,7 +539,9 @@ public final class Parser {
                 	genOpCode(OP_CODE.PRINT_NEWLINE);
                 	break;
                 default:
-                    throw new Error("Cannot write unknown type");
+        			String Row =  String.valueOf(currentToken.getLineRow()+1);
+        			String Col = String.valueOf(currentToken.getLineCol()+1);
+        			throw new Error(String.format("Не могу вывести неизвестный тип данных" + "("+Row+ " строка, "+Col+" столбец)"));
             }
             switch (currentToken.getTokenType()) {
                 case "TK_COMMA":
@@ -549,7 +553,9 @@ public final class Parser {
                 case "TK_SEMI_COLON":
                 	return;
                 default:
-                    throw new Error(String.format("Current token type (%s) is neither TK_COMMA nor TK_CLOSE_PARENTHESIS", currentToken.getTokenType()));
+        			String Row =  String.valueOf(currentToken.getLineRow()+1);
+        			String Col = String.valueOf(currentToken.getLineCol()+1);
+        			throw new Error(String.format("Текущий тип токена (%s) не является ни TK_COMMA, ни TK_CLOSE_PARENTHESIS"+currentToken.getTokenType()+" ("+Row+" строка, "+Col+" столбец)"));
             }
         }
     }
@@ -581,11 +587,16 @@ public final class Parser {
                 genOpCode(OP_CODE.POP);
                 genAddress(lhsAddress);
             } 
-            else
-            	throw new Error(String.format("Невозможно преобразовать тип (%s) в тип (%s)", lhsType, rhsType));
+            else {
+    			String Row =  String.valueOf(currentToken.getLineRow()+1);
+    			String Col = String.valueOf(currentToken.getLineCol()+1);
+    			throw new Error(String.format("Невозможно преобразовать тип (%s) в тип (%s)", lhsType, rhsType + "("+Row+" строка, "+Col+" столбец)"));
+    		}
         } else {
-        	throw new Error(String.format("Неизвестная переменная"));
-        }
+			String Row =  String.valueOf(currentToken.getLineRow()+1);
+			String Col = String.valueOf(currentToken.getLineCol()+1);
+			throw new Error(String.format("Неизвестная переменная '%s'", currentToken.getTokenValue()+ "("+Row+" строка, "+Col+" столбец)"));
+		}
     }
     
     public static TYPE C(){
@@ -692,8 +703,11 @@ public final class Parser {
                         return varFunctionResult.getDataType();
                     }
                 }
-                else
-                    throw new Error(String.format("Неизвестная переменная '%s'", currentToken.getTokenValue()));
+                else {
+        			String Row =  String.valueOf(currentToken.getLineRow()+1);
+        			String Col = String.valueOf(currentToken.getLineCol()+1);
+        			throw new Error(String.format("Неизвестная переменная '%s'", currentToken.getTokenValue()+ "("+Row+" строка, "+Col+" столбец)"));
+        		}
             case "TK_INTLIT":
                 genOpCode(OP_CODE.PUSHINTLIT);
                 genAddress(Integer.valueOf(currentToken.getTokenValue()));
@@ -725,7 +739,9 @@ public final class Parser {
                 match("TK_CLOSE_PARENTHESIS");
                 return t;
             default:
-                throw new Error("Unknown data type");
+    			String Row =  String.valueOf(currentToken.getLineRow()+1);
+    			String Col = String.valueOf(currentToken.getLineCol()+1);
+    			throw new Error(String.format("Неизвестный тип данных " + "("+Row+ " строка, "+Col+" столбец)"));
         }
     }
 
@@ -864,8 +880,11 @@ public final class Parser {
     }
 
     public static void match(String tokenType) {
-        if (!tokenType.equals(currentToken.getTokenType()))
-            throw new Error(String.format("Token type (%s) does not match current token type (%s)", tokenType, currentToken.getTokenType()));
+        if (!tokenType.equals(currentToken.getTokenType())) {
+			String Row =  String.valueOf(currentToken.getLineRow()+1);
+			String Col = String.valueOf(currentToken.getLineCol()+1);
+			throw new Error(String.format("Тип токена "+tokenType+" не соответствует текущему токену "+currentToken.getTokenType()+" ("+Row+" строка, "+Col+" столбец)"));
+		}
         else
             getToken();
     }
