@@ -590,7 +590,7 @@ public final class Parser {
             else {
     			String Row =  String.valueOf(currentToken.getLineRow()+1);
     			String Col = String.valueOf(currentToken.getLineCol()+1);
-    			throw new Error(String.format("Невозможно преобразовать тип (%s) в тип (%s)", lhsType, rhsType + "("+Row+" строка, "+Col+" столбец)"));
+    			throw new Error(String.format("Невозможно преобразовать тип (%s) в тип (%s ", lhsType, rhsType + ") ("+Row+" строка, "+Col+" столбец)"));
     		}
         } else {
 			String Row =  String.valueOf(currentToken.getLineRow()+1);
@@ -735,7 +735,7 @@ public final class Parser {
                 return F();
             case "TK_OPEN_PARENTHESIS":
                 match("TK_OPEN_PARENTHESIS");
-                TYPE t = C();
+                TYPE t = E();
                 match("TK_CLOSE_PARENTHESIS");
                 return t;
             default:

@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Stack;
 
+import mycompiler.Parser.TYPE;
+
 public class Generator {
 
     private static int ip = 0;
@@ -74,22 +76,22 @@ public class Generator {
                     halt();
                     break;
                 case EQL:
-                    eql(IsIf);
+                    eqls(IsIf, "eq");
                 	break;
                 case NEQL:
-                    neql(IsIf);
+                	eqls(IsIf, "ne");
                     break;
                 case LSS:
-                    less(IsIf);
+                    eqls(IsIf, "slt");
                     break;
                 case LEQ:
-                    lessEql(IsIf);
+                    eqls(IsIf, "sle");
                     break;
                 case GTR:
-                    greater(IsIf);
+                    eqls(IsIf, "sgt");
                     break;
                 case GEQ:
-                    greaterEql(IsIf);
+                    eqls(IsIf, "sge");
                     break;
                 case WHILECMP:
                 	whilecmp();
@@ -231,8 +233,15 @@ public class Generator {
     			vars.remove(0);
     			break;
     		}
-    		AllProgram+="@\""+vars.get(0).getName()+"\" = internal global i32 undef\n";
-    		dataArrayVars[vars.get(0).getAddress()] = "@\""+vars.get(0).getName()+"\"";
+    		String type="";
+    		if (vars.get(0).getDataType().equals(TYPE.I)) {
+    			type="i32";
+    		} else if (vars.get(0).getDataType().equals(TYPE.R)) {
+    			type="double";
+    		} else throw new Error("Ошибка типов");
+    	
+    		AllProgram += "@\"" + vars.get(0).getName() + "\" = internal global " + type + " undef\n";
+    		dataArrayVars[vars.get(0).getAddress()] = "@\"" + vars.get(0).getName() + "\"";
     		vars.remove(0);
     	}
     }
@@ -250,7 +259,7 @@ public class Generator {
     }
     
     private static void whilecmp() {
-    	IsIf=false;
+    	IsIf = false;
     	String label5 = giveMeVar();
     	
     	AllProgram += "br label " + label5 + "\n\n"
@@ -294,8 +303,8 @@ public class Generator {
     
     private static void forend() {
     	String labelforAdd = giveMeVar();
-    	AllProgram+="br label "+labelforAdd+"\n\n"
-    			+ ";Label (+1) "+labelforAdd+"\n";
+    	AllProgram += "br label " + labelforAdd + "\n\n"
+    			+ ";Label (+1) " + labelforAdd + "\n";
     	String load3 = giveMeVar();
     	String add = giveMeVar();
     	String label3 = stackNumber.pop();
@@ -303,11 +312,21 @@ public class Generator {
     	String replaceLabel2 = forStackLabels.pop();
     	AllProgram=AllProgram.replace(replaceLabel2, label4);
     	String temp = tested.pop();
-    	AllProgram+=load3+" = load i32, i32* "+temp+"\n"
-    			+ add+" = add nsw i32 "+load3+", 1\n"
-    					+ "store i32 "+add+", i32* "+temp+"\n"
-    							+ "br label "+label3+"\n\n"
-    									+ ";label (forend) "+label4+"\n";
+    	AllProgram += load3 + " = load i32, i32* " + temp+"\n"
+    			+ add + " = add nsw i32 " + load3 + ", 1\n"
+    					+ "store i32 " + add + ", i32* " + temp + "\n"
+    							+ "br label " + label3 + "\n\n"
+    									+ ";label (forend) " + label4 + "\n";
+    	
+    	if (!breakStackLabels.isEmpty()) {
+    		String replaceLabel = breakStackLabels.pop();
+    		AllProgram = AllProgram.replace(replaceLabel, label4);
+    	}
+    	
+    	if (!continueStackLabels.isEmpty()) {
+    		String replaceLabel = continueStackLabels.pop();
+    		AllProgram = AllProgram.replace(replaceLabel, labelforAdd);
+    	}
     }
     
     private static void forto() {
@@ -318,11 +337,11 @@ public class Generator {
     	String label1 = giveMeVar();
     	String replaceLabel = getFor();
     	String probuu2 = tested.pop();
-    	AllProgram+=load1+" = load i32, i32* "+probuu2+"\n"
-    			+ load2+" = load i32, i32* "+forto+"\n"
-    			+ icmp+" = icmp sle i32 "+load1+", "+load2+"\n"
-    					+ "br i1 "+icmp+", label "+label1+", label "+replaceLabel+"\n\n"
-    							+ ";Label (fordo) "+label1+"\n";
+    	AllProgram += load1 + " = load i32, i32* " + probuu2 + "\n"
+    			+ load2 + " = load i32, i32* " + forto + "\n"
+    			+ icmp + " = icmp sle i32 " + load1 + ", " + load2 + "\n"
+    					+ "br i1 " + icmp + ", label " + label1 + ", label " + replaceLabel + "\n\n"
+    							+ ";Label (fordo) " + label1 + "\n";
     	forStackLabels.push(replaceLabel);
     	tested.push(probuu2);
     }
@@ -390,7 +409,7 @@ public class Generator {
     private static Stack<String> breakStackLabels = new Stack<String>();
     private static int breakInt = 0;
     private static String getBreak() {
-    	String get = "$BREAK"+breakInt+"BREAK$";
+    	String get = "$BREAK" + breakInt + "BREAK$";
     	breakInt++;
     	return get;
     }
@@ -398,13 +417,14 @@ public class Generator {
     private static Stack<String> forStackLabels = new Stack<String>();
     private static int forInt = 0;
     private static String getFor() {
-    	String get = "$$"+forInt+"$$";
+    	String get = "$$" + forInt + "$$";
     	forInt++;
     	return get;
     }
     
     private static ArrayList<String> poryadok = new ArrayList<String>();
     private static Stack<String[]> dataArrayIf = new Stack<String[]>();
+    private static Stack<Boolean> elseOn = new Stack<Boolean>();
     
     private static void ifthen() {
     	poryadok.add("then");
@@ -418,7 +438,6 @@ public class Generator {
     	AllProgram+=";Label "+labelIfThen+" ifthen\n";
     }
     
-    private static Stack<Boolean> elseOn = new Stack<Boolean>();
     private static void ifelse() {
     	dataArrayVars = dataArrayIf.pop();
     	dataArrayIf.push(dataArrayVars.clone());
@@ -471,7 +490,6 @@ public class Generator {
     		if (!IsNotContinue)
     			IsNotContinue = true;
     	}
-
     	AllProgram+="\n;Label "+labelexit+" ifend\n";
     	dataArrayVars = dataArrayIf.pop();
     }
@@ -559,9 +577,9 @@ public class Generator {
     private static void funcstartreal() {
 		AllProgram += "define double @" + giveNameFunction() + "(" + vardecl;
 	}
-
-    private static void eql(boolean IsIf) {
-        String var2 = stackNumber.pop();
+    
+    private static void eqls(boolean IsIf, String eql) {
+    	String var2 = stackNumber.pop();
         String var1 = stackNumber.pop();
         String alloca = giveMeVar();
         String alloca2 = giveMeVar();
@@ -574,7 +592,7 @@ public class Generator {
         	alloca5 = getWhileLabel();
         AllProgram += alloca + " = load i32, i32* " + var1 + "\n"
         		+ alloca2 + " = load i32, i32* " + var2 + "\n"
-        		+ alloca3 + " = icmp eq i32 " + alloca + ", " + alloca2 + "\n"
+        		+ alloca3 + " = icmp "+ eql +" i32 " + alloca + ", " + alloca2 + "\n"
         						+ "br i1 " + alloca3 + ", label " + alloca4 + ", label " + alloca5 + "\n\n";
         if (IsIf)
         	ifStackLabels.push(alloca5);
@@ -583,29 +601,6 @@ public class Generator {
         stackNumber.push(alloca4);
     }
 
-    private static void neql(boolean IsIf) {
-        String var2 = stackNumber.pop();
-        String var1 = stackNumber.pop();
-        String alloca = giveMeVar();
-        String alloca2 = giveMeVar();
-        String alloca3 = giveMeVar();
-        String alloca4 = giveMeVar();
-        String alloca5;
-        if (IsIf)
-        	alloca5 = getIfLabel();
-        else
-        	alloca5 = getWhileLabel();
-        AllProgram+=alloca+" = load i32, i32* "+var1+"\n"
-        		+ alloca2+" = load i32, i32* "+var2+"\n"
-        		+ alloca3+" = icmp ne i32 "+alloca+", "+alloca2+"\n"
-        						+ "br i1 "+alloca3+", label "+alloca4+", label "+alloca5+"\n\n";
-        if (IsIf)
-        	ifStackLabels.push(alloca5);
-        else
-        	whileStackLabels.push(alloca5);
-        stackNumber.push(alloca4);
-    }
-    
     private static Stack<String> whileStackLabels = new Stack<String>();
     private static int WhileInt = 0;
     private static String getWhileLabel() {
@@ -614,30 +609,6 @@ public class Generator {
     	return get;
     }
 
-    private static void less(boolean IsIf) {
-        String var2 = stackNumber.pop();
-        String var1 = stackNumber.pop();
-        String alloca = giveMeVar();
-        String alloca2 = giveMeVar();
-        String alloca3 = giveMeVar();
-        String alloca4 = giveMeVar();
-        String alloca5;
-        if (IsIf)
-        	alloca5 = getIfLabel();
-        else
-        	alloca5 = getWhileLabel();
-        AllProgram+=alloca+" = load i32, i32* "+var1+"\n"
-        		+ alloca2+" = load i32, i32* "+var2+"\n"
-        		+ alloca3+" = icmp slt i32 "+alloca+", "+alloca2+"\n"
-        						+ "br i1 "+alloca3+", label "+alloca4+", label "+alloca5+"\n\n";
-        if (IsIf)
-        	ifStackLabels.push(alloca5);
-        else
-        	whileStackLabels.push(alloca5);
-        
-        stackNumber.push(alloca4);
-    }
-    
     private static Stack<String> ifStackLabels = new Stack<String>();
     private static int IfInt = 0;
     private static String getIfLabel() {
@@ -646,75 +617,6 @@ public class Generator {
     	return get;
     }
    
-    private static void greater(boolean IsIf) {
-        String var2 = stackNumber.pop();
-        String var1 = stackNumber.pop();
-        String alloca = giveMeVar();
-        String alloca2 = giveMeVar();
-        String alloca3 = giveMeVar();
-        String alloca4 = giveMeVar();
-        String alloca5;
-        if (IsIf)
-        	alloca5 = getIfLabel();
-        else
-        	alloca5 = getWhileLabel();
-        AllProgram+=alloca+" = load i32, i32* "+var1+"\n"
-        		+ alloca2+" = load i32, i32* "+var2+"\n"
-        		+ alloca3+" = icmp sgt i32 "+alloca+", "+alloca2+"\n"
-        						+ "br i1 "+alloca3+", label "+alloca4+", label "+alloca5+"\n\n";
-        if (IsIf)
-        	ifStackLabels.push(alloca5);
-        else
-        	whileStackLabels.push(alloca5);
-        stackNumber.push(alloca4);
-    }
-
-    private static void lessEql(boolean IsIf) {
-        String var2 = stackNumber.pop();
-        String var1 = stackNumber.pop();
-        String alloca = giveMeVar();
-        String alloca2 = giveMeVar();
-        String alloca3 = giveMeVar();
-        String alloca4 = giveMeVar();
-        String alloca5;
-        if (IsIf)
-        	alloca5 = getIfLabel();
-        else
-        	alloca5 = getWhileLabel();
-        AllProgram+=alloca+" = load i32, i32* "+var1+"\n"
-        		+ alloca2+" = load i32, i32* "+var2+"\n"
-        		+ alloca3+" = icmp sle i32 "+alloca+", "+alloca2+"\n"
-        						+ "br i1 "+alloca3+", label "+alloca4+", label "+alloca5+"\n\n";
-        if (IsIf)
-        	ifStackLabels.push(alloca5);
-        else
-        	whileStackLabels.push(alloca5);
-        stackNumber.push(alloca4);
-    }
-
-    private static void greaterEql(boolean IsIf) {
-        String var2 = stackNumber.pop();
-        String var1 = stackNumber.pop();
-        String alloca = giveMeVar();
-        String alloca2 = giveMeVar();
-        String alloca3 = giveMeVar();
-        String alloca4 = giveMeVar();
-        String alloca5;
-        if (IsIf)
-        	alloca5 = getIfLabel();
-        else
-        	alloca5 = getWhileLabel();
-        AllProgram+=alloca+" = load i32, i32* "+var1+"\n"
-        		+ alloca2+" = load i32, i32* "+var2+"\n"
-        		+ alloca3+" = icmp sge i32 "+alloca+", "+alloca2+"\n"
-        						+ "br i1 "+alloca3+", label "+alloca4+", label "+alloca5+"\n\n";
-        if (IsIf)
-        	ifStackLabels.push(alloca5);
-        else
-        	whileStackLabels.push(alloca5);
-        stackNumber.push(alloca4);
-    }
-
     private static void printReal() {
     	String alloca = giveMeVar();
     	String floatVar = stackNumber.pop();
@@ -722,7 +624,7 @@ public class Generator {
         AllProgram+=alloca+" = load double, double* "+floatVar.replace("float", "")+"\n"
         		+ alloca2+" = call i32 (i8*, ...) "
 				+ "@printf(i8* getelementptr inbounds ([4 x i8], "
-				+ "[4 x i8]* @.strfloat, i32 0, i32 0), doubl "+alloca+")\n";
+				+ "[4 x i8]* @.strfloat, i32 0, i32 0), double "+alloca+")\n";
     }
     
     private static void printLn() {
@@ -857,12 +759,12 @@ public class Generator {
         String alloca2 = giveMeVar();
         String alloca3 = giveMeVar();
         String alloca4 = giveMeVar();
-        AllProgram+=alloca+" = load double, double* "+var1.replace("float", "")+"\n"
-        		+ alloca2+" = load double, double* "+var2.replace("float", "")+"\n"
-        		+ alloca3+" = fdiv double "+alloca+", "+alloca2+"\n"
-        				+ alloca4+" = alloca double\n"
-        						+ "store double "+alloca3+", double* "+alloca4+"\n";
-        stackNumber.push(alloca4+"float");
+        AllProgram += alloca + " = load double, double* " + var1.replace("float", "") + "\n"
+        		+ alloca2 + " = load double, double* " + var2.replace("float", "") + "\n"
+        		+ alloca3 + " = fdiv double " + alloca + ", " + alloca2 + "\n"
+        				+ alloca4 + " = alloca double\n"
+        						+ "store double " + alloca3 + ", double* " + alloca4 + "\n";
+        stackNumber.push(alloca4 + "float");
     }
 
     public static void cvr(){
@@ -871,11 +773,11 @@ public class Generator {
         String alloca2 = giveMeVar();
         String alloca3 = giveMeVar();
         
-        AllProgram+=alloca1+" = load i32, i32* "+intVar+"\n"
-        		+ alloca2+" = sitofp i32 "+alloca1+" to double\n"
-        				+ alloca3+" = alloca double\n" + 
-        				"store double "+alloca2+", double* "+alloca3+"\n";
-        stackNumber.push(alloca3+"float");
+        AllProgram += alloca1 + " = load i32, i32* "+ intVar + "\n"
+        		+ alloca2 + " = sitofp i32 " + alloca1 + " to double\n"
+        				+ alloca3 + " = alloca double\n" + 
+        				"store double " + alloca2 + ", double* " + alloca3 + "\n";
+        stackNumber.push(alloca3 + "float");
     }
 
     public static void xchg(){
@@ -895,15 +797,15 @@ public class Generator {
     private static String giveMeVar() {
     	String var="";
     	KolvoVar++;
-    	var="%"+Integer.toString(KolvoVar);
+    	var = "%" + Integer.toString(KolvoVar);
     	return var;
     }
 
     public static void pushi(){
         int val = getAddressValue();
 		String alloca = giveMeVar();
-    	AllProgram+=alloca+" = alloca i32\n"
-	    		+ "store i32 " + val +", i32* "+alloca+"\n";
+    	AllProgram += alloca + " = alloca i32\n"
+	    		+ "store i32 " + val + ", i32* " + alloca + "\n";
 	    stackNumber.push(alloca);
     }
     
@@ -916,9 +818,9 @@ public class Generator {
         float val = getFloatValue();
 		String alloca = giveMeVar();
 		
-    	AllProgram+=alloca+" = alloca double\n"
-	    		+ "store double " + val +", double* "+alloca+"\n";
-	    stackNumber.push(alloca+"float");
+    	AllProgram += alloca + " = alloca double\n"
+	    		+ "store double " + val + ", double* " + alloca + "\n";
+	    stackNumber.push(alloca + "float");
     }
 
     public static void pushvarfromdecl(){
@@ -927,8 +829,8 @@ public class Generator {
         stackNumber.remove(0);
         String alloca = giveMeVar();
 
-        vardecl+=alloca+" = alloca i32\n"
-        		+ "store i32 "+var+", i32* "+alloca+"\n";
+        vardecl += alloca + " = alloca i32\n"
+        		+ "store i32 " + var + ", i32* " + alloca + "\n";
         dataArrayVars[dp] = alloca;
     }
     
@@ -938,9 +840,9 @@ public class Generator {
         String varData = dataArrayVars[dp];
         String load = giveMeVar();
         
-        AllProgram+=alloca+" = alloca i32\n"
-        		+ "store i32 " + varData +", i32* "+alloca+"\n"
-				+ load+" = load i32, i32* "+alloca+"\n";
+        AllProgram += alloca + " = alloca i32\n"
+        		+ "store i32 " + varData + ", i32* " + alloca + "\n"
+				+ load + " = load i32, i32* " + alloca + "\n";
         
         stackNumber.push(load);
     }
@@ -961,17 +863,17 @@ public class Generator {
         String alloca1 = giveMeVar();
         boolean integer=true;
         if (alloca.contains("float")) {
-        	integer=false;
+        	integer = false;
         }
-        if (dataArrayVars[dp]==null)
+        if (dataArrayVars[dp] == null) {
         	dataArrayVars[dp] = alloca;
-
+        }
         if (integer) {
-        	AllProgram+=alloca1+" = load i32, i32* "+alloca+"\n";
-        	AllProgram+="store i32 "+alloca1+", i32* "+dataArrayVars[dp]+"\n";
+        	AllProgram += alloca1 + " = load i32, i32* " + alloca + "\n";
+        	AllProgram += "store i32 " + alloca1 + ", i32* " + dataArrayVars[dp] + "\n";
         } else {
-        	AllProgram+=alloca1+" = load double, double* "+alloca.replace("float", "")+"\n";
-        	AllProgram+="store double "+alloca1+", double* "+dataArrayVars[dp].replace("float", "")+"\n";
+        	AllProgram += alloca1 + " = load double, double* " + alloca.replace("float", "") + "\n";
+        	AllProgram += "store double "+alloca1 + ", double* " + dataArrayVars[dp].replace("float", "") + "\n";
         }
     }
 
@@ -981,7 +883,7 @@ public class Generator {
         System.out.println(AllProgram);
         try(FileWriter writer = new FileWriter("output.ll", false))
         {
-            //writer.write(AllProgram);  
+            writer.write(AllProgram);  
         }
         catch(IOException ex){
             System.out.println(ex.getMessage());

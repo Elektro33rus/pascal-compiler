@@ -1,5 +1,4 @@
 program example;
-
 var x, n: integer;
    function fact(a : integer): integer;
    var temp1, temp2: integer;
@@ -16,9 +15,8 @@ var x, n: integer;
 		end;
     factresult:=a;
 	end;
-	
 begin
-z:=10;
+n:=10;
 x:=fact(n);
 writeln(x);
 end.
