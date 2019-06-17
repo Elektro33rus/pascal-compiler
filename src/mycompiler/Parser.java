@@ -11,9 +11,6 @@ public final class Parser {
         I, R, B, LN, S, P, F, STOP
     }
 
-    private static int dp = 0;
-    public static Stack<Symbol> arraySymbols = new Stack<Symbol>();
-
     private static final HashMap<String, TYPE> STRING_TYPE_HASH_MAP;
     static {
         STRING_TYPE_HASH_MAP = new HashMap<>();
@@ -33,8 +30,9 @@ public final class Parser {
 		FADD, SUB, FSUB, MULT, FMULT, FDIV, DIV, LSSIF, LSS, GTR, LEQ, GEQ, EQL, NEQL, STARTGLOBALVARS, STARTFUNCVARS
     }
 
+    private static int dp = 0;
     private static final int ADDRESS_SIZE = 4;
-
+    public static Stack<Symbol> arraySymbols = new Stack<Symbol>();
     private static Token currentToken;
     private static Iterator<Token> it;
     private static String Region;
@@ -858,7 +856,7 @@ public final class Parser {
     }
 
     public static void genOpCode(OP_CODE b){
-        //System.out.println(String.format("OP_CODE: %s", b));
+        System.out.println(String.format("OP_CODE: %s", b));
         byteArray[ip++] = (byte)(b.ordinal());
     }
 

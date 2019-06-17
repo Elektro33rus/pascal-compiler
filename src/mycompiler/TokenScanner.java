@@ -92,7 +92,6 @@ public final class TokenScanner {
     }
 
     public static ArrayList<Token> scan(File file) throws FileNotFoundException {
-        // Delimiter to scan each char
         Scanner sc = new Scanner(file).useDelimiter("");
         while (sc.hasNext()) {
             char element = sc.next().toLowerCase().charAt(0);
