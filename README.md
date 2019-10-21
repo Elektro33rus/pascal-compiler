@@ -1,3 +1,3 @@
 # pascal-compiler
-Компилятор паскаля на java
-elektro_ph_house@mail.ru
+From pascal to LLVM IR
+Questions -> elektro_ph_house@mail.ru
